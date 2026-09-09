@@ -8,13 +8,10 @@ import java.util.*;
 import java.util.Scanner;
 
 public class Main {
-
-
     public static void main(String[] args) {
 
         Bank bank = new Bank();
-        bank.loadUsers();
-        System.out.println("Welcome to ACME Banking App!");
+        System.out.println("====== Welcome to ACME Banking App! ======");
         System.out.println("Choose the operation you want to do:");
         System.out.println("1- Login");
         System.out.println("2- SignUp");
@@ -28,6 +25,12 @@ public class Main {
                 System.out.println("Enter password");
                 String pass = scan.nextLine();
                 System.out.println();
+                if(bank.login(username,pass)){
+                    System.out.println("Loged in successfully");
+                }
+                else {
+                    System.out.println("Invalid username or password, please try again!");
+                }
                 break;
             case 2:
                 System.out.println("Enter Username:");

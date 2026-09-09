@@ -11,14 +11,14 @@ public abstract class User implements IBankingOperations{
     private String role;
     private int failedLoginAttempts;
     private LocalDateTime lockedUntil;
-    private static int idStart = 1000;
+    private static int idStart = 1006;
     public User(String firstName, String lastName, String username, String password, String role) {
         idStart++;
         this.userId = idStart;
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
-        this.password = password;
+        this.password = SecurityUtil.hashPassword(password);
         this.role = role;
         this.failedLoginAttempts = 0;
         this.lockedUntil = null;
@@ -59,7 +59,10 @@ public abstract class User implements IBankingOperations{
     public String getPassword() {
         return password;
     }
-
+    public boolean checkPassword(String pass){
+        System.out.println("get pass"+ getPassword());
+        return SecurityUtil.verifyPassword(pass, getPassword());
+    }
     public void setPassword(String password) {
         this.password = password;
     }
@@ -93,6 +96,7 @@ public abstract class User implements IBankingOperations{
     }
 
     public boolean login(String username, String pass){
+
         return (username.equals(this.username) && pass.equals(this.password));
     }
     @Override
