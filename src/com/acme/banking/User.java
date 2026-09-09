@@ -60,7 +60,6 @@ public abstract class User implements IBankingOperations{
         return password;
     }
     public boolean checkPassword(String pass){
-        System.out.println("get pass"+ getPassword());
         return SecurityUtil.verifyPassword(pass, getPassword());
     }
     public void setPassword(String password) {

@@ -43,23 +43,23 @@ public class Bank {
                 }
 
                 switch (data[4]) {
-                    case "B":
+                    case "Banker":
                         Banker banker = new Banker(
                                 data[0],
                                 data[1],
                                 data[2],
                                 data[3],
-                                "B"
+                                "Banker"
                         );
                         addUser(banker);
                         break;
-                    case "C":
+                    case "Customer":
                         Customer customer = new Customer(
                                 data[0],
                                 data[1],
                                 data[2],
                                 data[3],
-                                "C"
+                                "Customer"
                         );
                         addUser(customer);
                         break;
@@ -69,8 +69,6 @@ public class Bank {
                 }
 
             }
-
-            System.out.println(appUsers);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -118,7 +116,7 @@ public class Bank {
             String line = new String();
 
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split("//|");
+                String[] data = line.split("\\|");
 
                 if (data.length != 6) {
                     System.out.println("Invalid Data");
@@ -127,26 +125,28 @@ public class Bank {
                 }
 
                 switch (data[5]) {
-                    case "B":
+                    case "Banker":
                         Banker banker = new Banker(
                                 data[1],
                                 data[2],
                                 data[3],
-                                data[4],
-                                "B"
+                               "",
+                                "Banker"
                         );
                         banker.setUserId(Integer.parseInt(data[0]));
+                        banker.setPassword(data[4]);
                         addUserToLists(banker);
                         break;
-                    case "C":
+                    case "Customer":
                         Customer customer = new Customer(
                                 data[1],
                                 data[2],
                                 data[3],
-                                data[4],
-                                "C"
+                               "",
+                                "Customer"
                         );
                         customer.setUserId(Integer.parseInt(data[0]));
+                        customer.setPassword(data[4]);
                         addUserToLists(customer);
                         break;
 
@@ -155,8 +155,6 @@ public class Bank {
                 }
 
             }
-
-            System.out.println(appUsers);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }    }
@@ -165,14 +163,6 @@ public class Bank {
     public boolean login(String username, String pass) {
 
         for (User user : appUsers) {
-
-            System.out.println("Entered username: " + username);
-            System.out.println("Stored username: " + user.getUsername());
-
-            System.out.println("Entered password: " + pass);
-            System.out.println("Stored hash: " + user.getPassword());
-
-            System.out.println("Password matches: " + user.checkPassword(pass));
 
             if (user.getUsername().equals(username)
                     && user.checkPassword(pass)) {

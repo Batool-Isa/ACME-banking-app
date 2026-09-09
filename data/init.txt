@@ -1,5 +1,5 @@
-saad,iqbal,saadiqbal,saadiqbal,B
-saad,khan,saadkhan,idh36%@#FGd,B
-melvin,gordon,melvingordon,uYWE732g4ga1,C
-stacey,abrams,staceyabrams,DEU8_qw3y72$,C
-micheal,paul,michealpaul,d^dg23g)@,C
+saad,iqbal,saadiqbal,saadiqbal,Banker
+saad,khan,saadkhan,idh36%@#FGd,Banker
+melvin,gordon,melvingordon,uYWE732g4ga1,Customer
+stacey,abrams,staceyabrams,DEU8_qw3y72$,Customer
+micheal,paul,michealpaul,d^dg23g)@,Customer
