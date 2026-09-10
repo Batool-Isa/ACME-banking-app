@@ -105,4 +105,7 @@ public abstract class User implements IBankingOperations{
                 ", Username: " + username +
                 ", Role: " + (role);
     }
+    public String getFullName() {
+        return  firstName + " " + lastName +" !";
+    }
 }

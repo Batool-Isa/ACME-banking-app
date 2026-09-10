@@ -1,5 +1,5 @@
-saad,iqbal,saadiqbal,saadiqbal,Banker
-saad,khan,saadkhan,idh36%@#FGd,Banker
+saad,iqbal,saadiqbal,saadiqbal,Customer
+saad,khan,saadkhan,idh36%@#FGd,Customer
 melvin,gordon,melvingordon,uYWE732g4ga1,Customer
 stacey,abrams,staceyabrams,DEU8_qw3y72$,Customer
 micheal,paul,michealpaul,d^dg23g)@,Customer
