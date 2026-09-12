@@ -98,6 +98,13 @@ public abstract class User implements IBankingOperations{
 
         return (username.equals(this.username) && pass.equals(this.password));
     }
+    public static void validateName(String name){
+    if (name.length() < 3){
+        System.out.println("Name Can't be less than 3 characters!");
+    }
+    }
+
+
     @Override
     public String toString() {
         return "User ID: " + userId +
@@ -106,6 +113,6 @@ public abstract class User implements IBankingOperations{
                 ", Role: " + (role);
     }
     public String getFullName() {
-        return  firstName + " " + lastName +" !";
+        return  firstName + " " + lastName ;
     }
 }

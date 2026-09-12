@@ -24,8 +24,8 @@ public class Banker extends User {
     }
 
     @Override
-    public void withdraw(double amount) {
-
+    public double withdraw(Account acc, double amount) {
+return 0;
     }
 
     @Override

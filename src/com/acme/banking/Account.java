@@ -37,6 +37,9 @@ public class Account {
 
     public void setOverDraftCounter(int overDraftCounter) {
         this.OverDraftCounter = overDraftCounter;
+        if(this.OverDraftCounter >= 2){
+            setActive(false);
+        }
     }
 
     public static int getStartId() {
@@ -76,6 +79,14 @@ public class Account {
         this.accountId = accountId;
     }
 
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -113,7 +124,9 @@ public class Account {
             return "Saving";
         }
     }
-
+//public static Customer getCustomerByAccount(int id){
+//        return
+//}
 
     public static void saveAccountsToFile(User user, Account acc) {
         try {

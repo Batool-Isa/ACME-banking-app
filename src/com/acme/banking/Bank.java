@@ -224,4 +224,17 @@ public class Bank {
         return customerArrayList.stream().filter(cus -> cus.getUserId() == userId).findFirst().orElse(null);
 
     }
+    public static Customer getCustomerByAccountId(int accountId) {
+
+        for (Customer customer : customerArrayList) {
+
+            Account account = customer.getAccountById(accountId);
+
+            if (account != null) {
+                return customer;
+            }
+        }
+
+        return null;
+    }
 }

@@ -1,0 +1,21 @@
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-10T15:00:07.383996900
+Amount: 30000.0
+Balance After Transaction: 9030000.0
+Done By: micheal paul
+----------------------------------------
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-10T15:00:39.848579800
+Amount: 300.0
+Balance After Transaction: 9029700.0
+Done By: micheal paul
+----------------------------------------
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-10T15:01:29.946215500
+Amount: 900.0
+Balance After Transaction: 9030600.0
+Done By: micheal paul
+----------------------------------------
