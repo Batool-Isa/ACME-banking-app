@@ -117,6 +117,7 @@ public class Account {
                 !type.equals("b") &&
                 !type.equals("checking")) {
             System.out.println("Invalid Input !! please try again");
+            return null;
         }
         if (type.equals("a") || type.equals("checking")) {
             return "Checking";

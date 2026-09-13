@@ -13,6 +13,7 @@ public class Transaction {
     private int accountId;
     int startId = 100000;
 
+
     public enum TransactionType {
         DEPOSIT,
         WITHDRAW,
@@ -57,6 +58,38 @@ public class Transaction {
 
     public TransactionType getTransactionType() {
         return transactionType;
+    }
+
+    public void setTransactionId(int transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public void setDoneBy(String doneBy) {
+        this.doneBy = doneBy;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public void setTransferId(Integer transferId) {
+        this.transferId = transferId;
+    }
+
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
     public int getTransactionId() {

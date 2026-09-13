@@ -4,9 +4,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.ZonedDateTime;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Customer extends User {
     private int customerId;
@@ -40,6 +48,14 @@ public class Customer extends User {
 
     }
 
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+
+        if (customerId > idStart) {
+            idStart = customerId;
+        }
+    }
+
     public ArrayList<Transaction> getTransactionsList() {
         return transactionsList;
     }
@@ -62,6 +78,12 @@ public class Customer extends User {
     public Account getAccountById(int accId) {
         return accounts.stream().filter(acc -> acc.getAccountId() == accId).findFirst().orElse(null);
     }
+    public void printAccount(ArrayList<Account> accounts){
+        for (Account acc : accounts) {
+            System.out.println("Account ID: " + acc.getAccountId() +
+                    " Account Type: " + acc.getType());
+        }
+    }
 
     @Override
     public double deposit(Account acc, double amount, Integer transferId) {
@@ -80,7 +102,7 @@ public class Customer extends User {
         addTransaction(trans);
         saveCustomerTransaction(trans);
         System.out.println("Amount deposit successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
-        if(!acc.isActive() && newBalance>=0){
+        if (!acc.isActive() && newBalance >= 0) {
             acc.setActive(true);
             acc.setOverDraftCounter(0);
             //System.out.println("acc overdraft: "+acc.getOverDraftCounter());
@@ -206,8 +228,10 @@ public class Customer extends User {
 
             writer.write("Amount: " + trans.getAmount());
             writer.newLine();
-
-            writer.write(String.format("Balance After Transaction: %.2f%n", trans.getBalance()));
+            writer.write(String.format(
+                    "Balance After Transaction: %.2f",
+                    trans.getBalance()
+            ));
             writer.newLine();
 
             writer.write("Done By: " + trans.getDoneBy());
@@ -221,6 +245,133 @@ public class Customer extends User {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void getDetailedAccountStatment(Account acc) {
+
+        System.out.println("========== ACCOUNT STATEMENT ==========");
+        System.out.println("Account ID: " + acc.getAccountId());
+        System.out.println("Account Type: " + acc.getType());
+        System.out.println("Balance: " + acc.getBalance());
+
+        //  System.out.println("Card Type: " + acc.getBalance());
+        System.out.println("---------------------------------------");
+
+        ArrayList<Transaction> transactionsFiltered = transactionsList.stream()
+                .filter(t -> t.getAccountId() == acc.getAccountId())
+                .collect(Collectors.toCollection(ArrayList::new));
+        //System.out.println("Filtered transactions: " + transactionsFiltered.size());
+        printTransactionDetails(transactionsFiltered);
+    }
+    public void printTransactionDetails(ArrayList<Transaction> list){
+        for (Transaction t:list){
+            System.out.println("Transaction ID: " + t.getTransactionId());
+            System.out.println("Type: " + t.getTransactionType());
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            System.out.println("Date: " + t.getDateTime().format(formatter));
+            System.out.println("Amount: " + t.getAmount());
+            System.out.println("Balance After Transaction: " + t.getBalance());
+            System.out.println("Done By: " + t.getDoneBy());
+            System.out.println("---------------------------------------");
+        }
+    }
+    public ArrayList<Transaction> filterTransaction(String filterChoice, Scanner scan) {
+        LocalDate today = LocalDate.now();
+        switch (filterChoice) {
+            case "1":
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> t.getDateTime().toLocalDate().equals(today))
+                        .toList());
+
+            case "2":
+                LocalDate yesterday = today.minusDays(1);
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> t.getDateTime().toLocalDate().equals(yesterday))
+                        .toList());
+            case "3":
+                LocalDate startOfWeek = today.with(DayOfWeek.SUNDAY); // each week will start on sunday -- saturday
+                LocalDate startOfLastWeek = startOfWeek.minusWeeks(1);
+                LocalDate endOfLastWeek = startOfWeek.minusDays(1);
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> {
+                            LocalDate date = t.getDateTime().toLocalDate();
+                            return !date.isBefore(startOfLastWeek) && !date.isAfter(endOfLastWeek);
+                        })
+                        .toList());
+            case "4": //last 7 days
+                LocalDate lastweek = today.minusDays(6);
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> {
+                            LocalDate date = t.getDateTime().toLocalDate();
+                            return !date.isBefore(lastweek) && !date.isAfter(today);
+                        })
+                        .toList());
+            case "5":
+                LocalDate firstDayOfMonth = today.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth());
+                LocalDate lastDayOfMonth = today.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth());
+
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> {
+                            LocalDate date = t.getDateTime().toLocalDate();
+                            return !date.isBefore(firstDayOfMonth) && !date.isAfter(lastDayOfMonth);
+                        })
+                        .toList());
+            case "6":
+                LocalDate last30days = today.minusDays(29);
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> {
+                            LocalDate date = t.getDateTime().toLocalDate();
+                            return !date.isBefore(last30days) && !date.isAfter(today);
+                        })
+                        .toList());
+            case "7":
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                LocalDate date = null;
+                while (date == null) {
+                    System.out.print("Enter date (YYYY-MM-DD), e.g., 2026-09-13: ");
+                    String input = scan.nextLine();
+                    try {
+                        date = LocalDate.parse(input, formatter);
+                    } catch (DateTimeParseException e) {
+                        System.out.println("Invalid format! Please try again using YYYY-MM-DD.");
+                    }
+                }
+                LocalDate choosenDate = date;
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> t.getDateTime().toLocalDate().equals(choosenDate))
+                        .toList());
+
+            case "8":
+                DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
+
+                LocalDate date1 = null;
+                LocalTime time = null;
+
+                while (date1 == null || time == null) {
+                    System.out.print("Enter date (YYYY-MM-DD), e.g., 2026-09-13: ");
+                    String input = scan.nextLine();
+                    System.out.print("Enter Time (HH:mm), e.g., 10:40: ");
+                    String inputTime = scan.nextLine();
+                    try {
+                        date1 = LocalDate.parse(input, formatter1);
+                        time = LocalTime.parse(inputTime, formatter2);
+                    } catch (DateTimeParseException e) {
+                        date1 = null;
+                        time = null;
+                        System.out.println("Invalid format! Please try again.");
+                    }
+                }
+                LocalDate choosenDate1 = date1;
+                LocalTime choosenTime = time;
+                return new ArrayList<Transaction>(this.getTransactionsList()
+                        .stream().filter(t -> t.getDateTime().toLocalDate().equals(choosenDate1) && t.getDateTime().toLocalTime().equals(choosenTime))
+                        .toList());
+        }
+
+        return null;
     }
 }
 

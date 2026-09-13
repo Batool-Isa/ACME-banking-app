@@ -4,7 +4,12 @@ import java.io.*;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.StringJoiner;
-
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 public class Bank {
 
     private static ArrayList<User> appUsers;
@@ -18,6 +23,7 @@ public class Bank {
         //load bank users
         initializedUsersData();
         loadAccounts();
+        loadTransactions();
     }
 
 
@@ -84,69 +90,134 @@ public class Bank {
     }
 
     public static void addUsersToFile(User user) {
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("data/users.txt", true));
-            String linesToAppend = new StringJoiner("|")
-                    .add(String.valueOf(user.getUserId()))
-                    .add(user.getFirstName())
-                    .add(user.getLastName())
-                    .add(user.getUsername())
-                    .add(user.getPassword())
-                    .add(user.getRole()).toString();
 
+        try {
+            BufferedWriter writer =
+                    new BufferedWriter(new FileWriter("data/users.txt", true));
+
+            String linesToAppend;
+
+            if (user instanceof Customer) {
+                Customer customer = (Customer) user;
+
+                linesToAppend = new StringJoiner("|")
+                        .add(String.valueOf(user.getUserId()))
+                        .add(String.valueOf(customer.getCustomerId()))
+                        .add(user.getFirstName())
+                        .add(user.getLastName())
+                        .add(user.getUsername())
+                        .add(user.getPassword())
+                        .add(user.getRole())
+                        .toString();
+
+            } else {
+                linesToAppend = new StringJoiner("|")
+                        .add(String.valueOf(user.getUserId()))
+                        .add(user.getFirstName())
+                        .add(user.getLastName())
+                        .add(user.getUsername())
+                        .add(user.getPassword())
+                        .add(user.getRole())
+                        .toString();
+            }
 
             writer.write(linesToAppend);
             writer.newLine();
-
             writer.close();
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void loadUsers() {
+
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("data/users.txt"));
+            BufferedReader reader =
+                    new BufferedReader(new FileReader("data/users.txt"));
+
             String line;
 
             while ((line = reader.readLine()) != null) {
+
                 String[] data = line.split("\\|");
 
-                if (data.length != 6) {
+                if (data.length != 7) {
                     System.out.println("Invalid Data");
                     break;
                 }
 
-                switch (data[5]) {
+                int userId = Integer.parseInt(data[0]);
+                int customerId = Integer.parseInt(data[1]);
+
+                switch (data[6]) {
+
                     case "Banker":
-                        Banker banker = new Banker(data[1], data[2], data[3], "", "Banker");
-                        banker.setUserId(Integer.parseInt(data[0]));
-                        banker.setPassword(data[4]);
+
+                        Banker banker = new Banker(
+                                data[2],
+                                data[3],
+                                data[4],
+                                "",
+                                "Banker"
+                        );
+
+                        banker.setUserId(userId);
+                        banker.setPassword(data[5]);
+
                         addUserToLists(banker);
                         break;
+
                     case "Customer":
-                        Customer customer = new Customer(data[1], data[2], data[3], "", "Customer");
-                        customer.setUserId(Integer.parseInt(data[0]));
-                        customer.setPassword(data[4]);
+
+                        Customer customer = new Customer(
+                                data[2],
+                                data[3],
+                                data[4],
+                                "",
+                                "Customer"
+                        );
+
+                        customer.setUserId(userId);
+                        customer.setCustomerId(customerId);
+                        customer.setPassword(data[5]);
+
                         addUserToLists(customer);
                         break;
 
                     default:
                         System.out.println("Invalid role");
                 }
-
             }
+
+            reader.close();
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-
     public User login(String username, String pass) {
         for (User user : appUsers) {
-            if (user.getUsername().equals(username) && user.checkPassword(pass)) {
+            if (user.getUsername().equals(username)) {
+                if(user.checkPassword(pass)){
+                    return user;
+                }else{
+                    user.setFailedLoginAttempts(user.getFailedLoginAttempts()+1);
+                    System.out.println("Attemp: "+user.getFailedLoginAttempts());
+                    if(user.getFailedLoginAttempts() >= 3){
+                        System.out.println("Account Locked for 1 minutes!!!");
+                        try {
+                            Thread.sleep(60000);
+                        }catch (InterruptedException e){
+                            Thread.currentThread().interrupt();
+                        }
+                    user.setFailedLoginAttempts(0);
+                        System.out.println("Account unlocked! Please try again.");
 
-                return user;
+                    }
+
+                }
             }
         }
         return null;
@@ -200,9 +271,116 @@ public class Bank {
             throw new RuntimeException(e);
         }
     }
+
+    public static void loadTransactions() {
+
+        for (Customer customer : customerArrayList) {
+            File customerFile = new File(
+                    "data/customerFiles",
+                    "Customer-" + customer.getFullName()
+                            + "-" + customer.getCustomerId()
+            );
+
+            if (!customerFile.exists()) {
+                continue;
+            }
+
+            try {
+                BufferedReader reader =
+                        new BufferedReader(new FileReader(customerFile));
+
+                String line;
+
+                int accountId = 0;
+                int transactionId = 0;
+                Transaction.TransactionType type = null;
+                LocalDateTime dateTime = null;
+                double amount = 0;
+                double balance = 0;
+                String doneBy = "";
+
+                while ((line = reader.readLine()) != null) {
+
+                    if (line.startsWith("Account ID: ")) {
+
+                        accountId = Integer.parseInt(
+                                line.substring("Account ID: ".length())
+                        );
+
+                    } else if (line.startsWith("Transaction ID: ")) {
+
+                        transactionId = Integer.parseInt(
+                                line.substring("Transaction ID: ".length())
+                        );
+
+                    } else if (line.startsWith("Type: ")) {
+
+                        type = Transaction.TransactionType.valueOf(
+                                line.substring("Type: ".length())
+                        );
+
+                    } else if (line.startsWith("Date: ")) {
+
+                        DateTimeFormatter formatter =
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+                        dateTime = LocalDateTime.parse(
+                                line.substring("Date: ".length()),
+                                formatter
+                        );
+
+                    } else if (line.startsWith("Amount: ")) {
+
+                        amount = Double.parseDouble(
+                                line.substring("Amount: ".length())
+                        );
+
+                    } else if (line.startsWith("Balance After Transaction: ")) {
+
+                        balance = Double.parseDouble(
+                                line.substring("Balance After Transaction: ".length())
+                        );
+
+                    } else if (line.startsWith("Done By: ")) {
+
+                        doneBy = line.substring("Done By: ".length());
+
+                    } else if (line.startsWith("--------------------------------")) {
+
+                        Transaction trans = new Transaction(
+                                type,
+                                doneBy,
+                                balance,
+                                amount,
+                                accountId,
+                                null
+                        );
+
+                        trans.setTransactionId(transactionId);
+                        trans.setDateTime(dateTime);
+
+                        customer.addTransaction(trans);
+
+                        accountId = 0;
+                        transactionId = 0;
+                        type = null;
+                        dateTime = null;
+                        amount = 0;
+                        balance = 0;
+                        doneBy = "";
+                    }
+                }
+
+                reader.close();
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
     public static ArrayList<Account> getCustomerAccounts(User user) {
         if (user instanceof Customer) {
-            System.out.println(((Customer) user).getAccounts());
+          //  System.out.println(((Customer) user).getAccounts());
             return ((Customer) user).getAccounts();
         }
         return null;
