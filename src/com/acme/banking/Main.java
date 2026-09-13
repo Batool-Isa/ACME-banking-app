@@ -7,7 +7,7 @@ public class Main {
 
     public static void startMenu(Scanner scan, User user) {
         boolean continueMenu = true;
-        while(continueMenu){
+        while (continueMenu) {
             System.out.println("");
             System.out.println("====== Welcome " + user.getFullName() + "! ======");
             System.out.println("Choose the operation you want to do:");
@@ -40,10 +40,10 @@ public class Main {
                         if (account != null) {
                             System.out.print("Enter the amount you want to deposit:");
                             int amount = scan.nextInt();
-                            user.deposit(account, amount);
+                            user.deposit(account, amount, null);
                             valid = true;
                         } else {
-                            System.out.print("Invalid Account ID!!!!");
+                            System.out.println("Invalid Account ID!!!!");
                         }
                     } while (!valid);
                     scan.nextLine();
@@ -64,7 +64,7 @@ public class Main {
                         System.out.println("Invalid Account ID!!!!");
                         break;
                     }
-                    user.withdraw(account2, amount2);
+                    user.withdraw(account2, amount2, null);
                     break;
                 case "4":
                 case "transfer":
@@ -90,7 +90,7 @@ public class Main {
                             }
                             System.out.println("Enter the amount you want to transfer:");
                             int transferAmount = scan.nextInt();
-                            user.transferMoney(transferAmount, srcAccountId,recipientAccId);
+                            user.transferMoney(transferAmount, srcAccountId, recipientAccId);
                             validId = true;
                         } else {
                             System.out.println("Invalid Account ID!!!!");
@@ -100,7 +100,8 @@ public class Main {
                     break;
                 case "5":
                 case "logout":
-                    continueMenu= false;
+                case "exit":
+                    continueMenu = false;
                     return;
 
             }
@@ -165,11 +166,11 @@ public class Main {
                     String firstName = scan.nextLine().trim();
                     System.out.print("Enter your last name:");
                     String lastName = scan.nextLine().trim();
-                    System.out.print("Enter password");
+                    System.out.print("Enter password: ");
                     String password = scan.nextLine();
                     System.out.print("Choose Account Type \n"
                             + "A- Checking \n"
-                            + "B- Saving");
+                            + "B- Saving \n");
                     String type = scan.nextLine().toLowerCase();
                     Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, password, type);
                     bank.addUser(customer);

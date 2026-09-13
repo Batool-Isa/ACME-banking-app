@@ -19,12 +19,12 @@ public class Banker extends User {
 
 
         @Override
-    public double deposit(Account acc, double amount) {
+    public double deposit(Account acc, double amount, Integer transferId) {
         return 0;
     }
 
     @Override
-    public double withdraw(Account acc, double amount) {
+    public double withdraw(Account acc, double amount, Integer transferId) {
 return 0;
     }
 

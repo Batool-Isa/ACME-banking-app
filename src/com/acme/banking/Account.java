@@ -124,9 +124,6 @@ public class Account {
             return "Saving";
         }
     }
-//public static Customer getCustomerByAccount(int id){
-//        return
-//}
 
     public static void saveAccountsToFile(User user, Account acc) {
         try {
@@ -140,7 +137,8 @@ public class Account {
                     .add(acc.getPassword())
                     .add(String.valueOf(acc.getBalance()))
                     .add(String.valueOf(acc.getCreatedAt()))
-                    .add(String.valueOf(acc.getOverDraftCounter())));
+                    .add(String.valueOf(acc.getOverDraftCounter()))
+                    .add(String.valueOf(acc.isActive())));
 
             writer.write(linesToAppend);
             writer.newLine();

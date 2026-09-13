@@ -4,14 +4,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.StringJoiner;
 
 public class Customer extends User {
     private int customerId;
     private ArrayList<Account> accounts;
     private ArrayList<Transaction> transactionsList = new ArrayList<>();
     private static int idStart = 5000;
+    private static int transferId = 60000;
 
     public Customer(String firstName, String lastName, String username, String password, String role) {
         super(firstName, lastName, username, password, role);
@@ -23,10 +25,6 @@ public class Customer extends User {
 
     public int getCustomerId() {
         return customerId;
-    }
-
-    public void setCustomerId(int customerId) {
-        this.customerId = customerId;
     }
 
     public static Customer createCustomer(String firstName, String lastName, String username, String password, String accType) {
@@ -66,64 +64,103 @@ public class Customer extends User {
     }
 
     @Override
-    public double deposit(Account acc, double amount) {
+    public double deposit(Account acc, double amount, Integer transferId) {
         System.out.println("user balance before seposit: " + acc.getBalance());
 
-        if (amount > 0) {
-            double balance = acc.getBalance() + amount;
-            acc.setBalance(balance);
-            // save transaction logic here
-            Transaction trans = new Transaction(Transaction.TransactionType.DEPOSIT, this.getFullName(), balance, amount, 0);
-            addTransaction(trans);
-            saveCustomerTransaction(trans);
-            System.out.println("Amount deposit successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
-            return balance;
+        if (amount < 0) {
+            System.out.println("Invalid Amount!!");
+            return -1;
         }
-        return -1;
+        double newBalance = acc.getBalance() + amount;
+        acc.setBalance(newBalance);
+        Transaction trans = new Transaction(Transaction.TransactionType.DEPOSIT, this.getFullName(), newBalance, amount, acc.getAccountId(), null);
+        if (transferId != null) {
+            trans.setTransferId(transferId);
+        }
+        addTransaction(trans);
+        saveCustomerTransaction(trans);
+        System.out.println("Amount deposit successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
+        if(!acc.isActive() && newBalance>=0){
+            acc.setActive(true);
+            acc.setOverDraftCounter(0);
+            //System.out.println("acc overdraft: "+acc.getOverDraftCounter());
+            System.out.println("Your Account is Active Now!");
+        }
+        return newBalance;
+
     }
 
     @Override
-    public double withdraw(Account acc, double amount) {
+    public double withdraw(Account acc, double amount, Integer transferId) {
         System.out.println("user balance before Withdraw: " + acc.getBalance());
 
         if (amount < 0) {
             System.out.println("Invalid Amount!!");
             return -1;
         }
+        if (!acc.isActive()) {
+            System.out.println("over draft num" + acc.getOverDraftCounter());
+            System.out.println("Your Account is not active , please deposit moeny to resolve negative balance");
+            return -1;
+        }
         double oldBalance = acc.getBalance();
-        if(oldBalance < 0){
-            if(amount > 100){
+        if (oldBalance < 0) {
+            if (amount > 100) {
                 System.out.println("This Transaction can't be done. You can't withdraw more than 100$ if account is negative.");
+                return -1;
+            } else {
+                acc.setOverDraftCounter(acc.getOverDraftCounter() + 1);
+                double balance = oldBalance - (amount);
+                acc.setBalance(balance);
+                // save transaction logic here
+                Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, this.getFullName(), balance, amount, acc.getAccountId(), null);
+                if (transferId != null) {
+                    trans.setTransferId(transferId);
+                }
+                addTransaction(trans);
+                saveCustomerTransaction(trans);
+                getOverDraftPenalty(acc);
+                return balance;
             }
-            acc.setOverDraftCounter(acc.getOverDraftCounter()+1);
-            double balance = oldBalance- 35;
-            acc.setBalance(balance);
-            // save transaction logic here
-            Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, this.getFullName(), balance, amount, 0);
-            addTransaction(trans);
-            saveCustomerTransaction(trans);
-            return balance;
-        }else {
+        } else {
             double balance = acc.getBalance() - amount;
             acc.setBalance(balance);
             // save transaction logic here
-            Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, this.getFullName(), balance, amount, 0);
+            Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, this.getFullName(), balance, amount, acc.getAccountId(), null);
+            if (transferId != null) {
+                trans.setTransferId(transferId);
+            }
             addTransaction(trans);
             saveCustomerTransaction(trans);
             System.out.println("Amount withdraw successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
+            if (balance < 0) {
+                acc.setOverDraftCounter(acc.getOverDraftCounter() + 1);
+                getOverDraftPenalty(acc);
+            }
             return balance;
         }
+    }
+
+    public void getOverDraftPenalty(Account acc) {
+        double balance = acc.getBalance() - 35;
+        acc.setBalance(balance);
+        Transaction trans2 = new Transaction(Transaction.TransactionType.OVERDRAFT_PENALTY, this.getFullName(), balance, 35, acc.getAccountId(), null);
+        addTransaction(trans2);
+        saveCustomerTransaction(trans2);
     }
 
     @Override
     public void transferMoney(double amount, int srcAccount, int destinationAccount) {
         Customer srcCustomer = Bank.getCustomerByAccountId(srcAccount);
-        srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount);
-        Customer customer = Bank.getCustomerByAccountId(destinationAccount);
-        Account destAccount = customer.getAccountById(destinationAccount);
-        customer.deposit(destAccount, amount);
-
+        int id = transferId++;
+        if (srcCustomer != null) {
+            srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id);
+            Customer customer = Bank.getCustomerByAccountId(destinationAccount);
+            Account destAccount = customer.getAccountById(destinationAccount);
+            customer.deposit(destAccount, amount, id);
+        }
     }
+
     public void saveCustomerTransaction(Transaction trans) {
 
         File folder = new File("data/customerFiles");
@@ -151,19 +188,26 @@ public class Customer extends User {
             BufferedWriter writer =
                     new BufferedWriter(new FileWriter(customerFile, true));
 
+            writer.write("Account ID: " + trans.getAccountId());
+            writer.newLine();
             writer.write("Transaction ID: " + trans.getTransactionId());
             writer.newLine();
 
             writer.write("Type: " + trans.getTransactionType());
             writer.newLine();
 
-            writer.write("Date: " + trans.getDateTime());
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            String formattedTx = trans.getDateTime().format(formatter);
+
+            writer.write("Date: " + formattedTx);
             writer.newLine();
 
             writer.write("Amount: " + trans.getAmount());
             writer.newLine();
 
-            writer.write("Balance After Transaction: " + trans.getBalance());
+            writer.write(String.format("Balance After Transaction: %.2f%n", trans.getBalance()));
             writer.newLine();
 
             writer.write("Done By: " + trans.getDoneBy());
