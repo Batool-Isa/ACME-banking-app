@@ -32,7 +32,7 @@ public class Transaction {
         this.accountId = accountId;
     }
 
-    public int getTransferId() {
+    public Integer getTransferId() {
         return transferId;
     }
 
@@ -96,7 +96,4 @@ public class Transaction {
         return transactionId;
     }
 
-    public void setTransferId(int transferId) {
-        this.transferId = transferId;
-    }
 }

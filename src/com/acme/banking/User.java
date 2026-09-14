@@ -2,7 +2,7 @@ package com.acme.banking;
 
 import java.time.LocalDateTime;
 
-public abstract class User implements IBankingOperations{
+public abstract class User{
     private int userId;
     private String firstName;
     private String lastName;
@@ -67,7 +67,7 @@ public abstract class User implements IBankingOperations{
     }
 
     public String getRole() {
-        if (role.equals("B")){
+        if (role.equalsIgnoreCase("Banker")){
             return "Banker";
         }else {
             return "Customer";

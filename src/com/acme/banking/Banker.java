@@ -1,5 +1,12 @@
 package com.acme.banking;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+
 public class Banker extends User {
     private int bankerId;
     private static int idStart = 3000;
@@ -17,19 +24,51 @@ public class Banker extends User {
         this.bankerId = bankerId;
     }
 
+    public void saveBankerOperations(Customer customer) {
 
-        @Override
-    public double deposit(Account acc, double amount, Integer transferId) {
-        return 0;
-    }
+        File folder = new File("data/bankerFiles");
 
-    @Override
-    public double withdraw(Account acc, double amount, Integer transferId) {
-return 0;
-    }
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
 
-    @Override
-    public void transferMoney(double amount, int srcAccount, int destinationAccount) {
+        File customerFile = new File(
+                folder,
+                "Banker-" + this.getFullName() + "-" + this.getBankerId()
+        );
 
+        try {
+            if (!customerFile.exists()) {
+                customerFile.createNewFile();
+            }
+
+            BufferedWriter writer =
+                    new BufferedWriter(new FileWriter(customerFile, true));
+
+            writer.write("Customer ID: " + customer.getCustomerId());
+            writer.newLine();
+            writer.write("Customer Full Name: " + customer.getFullName());
+            writer.newLine();
+
+            writer.write("Customer Username: " + customer.getUsername());
+            writer.newLine();
+
+            Account acc = customer.getAccounts().stream().max(Comparator.comparing(a->a.getCreatedAt())).orElse(null);
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            String formattedTx = acc.getCreatedAt().format(formatter);
+
+            writer.write("Date: " + formattedTx);
+            writer.newLine();
+
+            writer.write("----------------------------------------");
+            writer.newLine();
+
+            writer.close();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

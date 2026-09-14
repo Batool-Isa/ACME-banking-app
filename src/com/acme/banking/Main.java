@@ -2,14 +2,14 @@ package com.acme.banking;
 
 import java.util.*;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Main {
 
-    public static void startMenu(Scanner scan, User user) {
+    public static void startMenu(Scanner scan, User user, Bank bank) {
         boolean continueMenu = true;
         while (continueMenu) {
-            System.out.println("");
-            System.out.println("====== Welcome " + user.getFullName() + "! ======");
+            System.out.println("\n====== Welcome " + user.getFullName() + "! ======");
             System.out.println("Choose the operation you want to do:");
             System.out.println("1- Create new banking account");
             System.out.println("2- Deposit Money");
@@ -17,10 +17,11 @@ public class Main {
             System.out.println("4- Transfer Money");
             System.out.println("5- Print Detailed Account Statement");
             System.out.println("6- Filter Transaction");
-            System.out.println("7- Exit");
+            System.out.println("7- Change Card Type");
+            System.out.println("8- Exit");
             String userInput = scan.nextLine().toLowerCase();
             ArrayList<Account> accounts = Bank.getCustomerAccounts(user);
-            Customer customer = Bank.getCustomerById(user.getUserId());
+            Customer customer = bank.getcustomerbyUserId(user.getUserId());
             switch (userInput) {
                 case "1":
                 case "account":
@@ -35,11 +36,11 @@ public class Main {
                     do {
                         System.out.print("Enter the account ID:");
                         int accountId = scan.nextInt();
-                        Account account = (customer.getAccountById(accountId));
+                        Account account = bank.getAccount(accountId);
                         if (account != null) {
                             System.out.print("Enter the amount you want to deposit:");
                             int amount = scan.nextInt();
-                            user.deposit(account, amount, null);
+                            customer.deposit(account, amount, null, user.getFullName());
                             valid = true;
                         } else {
                             System.out.println("Invalid Account ID!!!!");
@@ -62,7 +63,7 @@ public class Main {
                         scan.nextLine();
                         break;
                     }
-                    user.withdraw(account2, amount2, null);
+                    customer.withdraw(account2, amount2, null);
                     scan.nextLine();
                     break;
                 case "4":
@@ -85,7 +86,7 @@ public class Main {
                             }
                             System.out.println("Enter the amount you want to transfer:");
                             int transferAmount = scan.nextInt();
-                            user.transferMoney(transferAmount, srcAccountId, recipientAccId);
+                            customer.transferMoney(transferAmount, srcAccountId, recipientAccId);
                             validId = true;
                         } else {
                             System.out.println("Invalid Account ID!!!!");
@@ -120,18 +121,67 @@ public class Main {
                     customer.printTransactionDetails(customer.filterTransaction(filterChoice, scan));
                     break;
                 case "7":
+                case "change":
+                case "card":
+                    System.out.println("Choose the account you want to withdraw money to.");
+                    customer.printAccount(accounts);
+                    System.out.print("Enter the account ID: ");
+                    int accountId4 = scan.nextInt();
+                    scan.nextLine();
+                    Account userAccount = (customer.getAccountById(accountId4));
+                    userAccount.changeCardType(userAccount, scan);
+                    break;
+                case "8":
                 case "logout":
                 case "exit":
                     continueMenu = false;
                     return;
+            }
+        }
 
+    }
+
+    public static void bankerStartMenu(Scanner scan, User user, Bank bank) {
+        boolean continueMenu = true;
+        while (continueMenu) {
+            System.out.println("\n====== Welcome " + user.getFullName() + "! ======");
+            System.out.println("Choose the operation you want to do:");
+            System.out.println("1- Add new customer");
+            System.out.println("2- View Customer History");
+            System.out.println("3- Exit");
+            String userInput = scan.nextLine().toLowerCase();
+            switch (userInput) {
+                case "1":
+                case "account":
+                case "create":
+                    addCustomerMenu(bank, scan, (Banker) user);
+                    break;
+                case "2":
+                case "view":
+                case "history":
+                    System.out.println("Enter the customer id: ");
+                    int customerId = scan.nextInt();
+                    scan.nextLine();
+                    Customer customer = bank.getCustomerByCustomerId(customerId);
+
+                   for (Account acc: customer.getAccounts() ){
+                       customer.getDetailedAccountStatment(acc);
+
+                   }
+
+                    break;
+                case "3":
+                case "logout":
+                case "exit":
+                    continueMenu = false;
+                    return;
             }
         }
 
     }
 
 
-    public static Account createAccountMenu(Scanner scan, User user) {
+    public static void createAccountMenu(Scanner scan, User user) {
         String type;
         do {
             System.out.println("==== Choose Account Type: ====");
@@ -148,8 +198,7 @@ public class Main {
         System.out.println("Please create a password for this account.");
         String pass = scan.nextLine();
         acc.setPassword(SecurityUtil.hashPassword(pass));
-        acc.setFirstLogin(false);
-        return acc;
+
     }
 
 
@@ -163,14 +212,43 @@ public class Main {
         String lastName = scan.nextLine().trim();
         System.out.print("Enter password: ");
         String password = scan.nextLine();
-        System.out.print("Choose Account Type \n"
-                + "A- Checking \n"
-                + "B- Saving \n");
+        System.out.print("""
+                Choose Account Type\s
+                A- Checking\s
+                B- Saving\s
+                """);
         String type = scan.nextLine().toLowerCase();
         Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, password, type);
         bank.addUser(customer);
         System.out.println("Congrats, Your Banking Account Created Successfully!");
         System.out.println("Your username: " + customer.getUsername() + " & customer Id: " + customer.getCustomerId());
+    }
+
+    public static void addCustomerMenu(Bank bank, Scanner scan, Banker banker) {
+        // add input validation later
+        System.out.print("Enter Customer Username:");
+        String customerUsername = scan.nextLine().trim();
+        System.out.print("Enter Customer first name:");
+        String firstName = scan.nextLine().trim();
+        System.out.print("Enter Customer last name:");
+        String lastName = scan.nextLine().trim();
+        String pass = generateTemporaryPassword();
+        System.out.print("""
+                Choose Account Type\s
+                A- Checking\s
+                B- Saving\s
+                """);
+        String type = scan.nextLine().toLowerCase();
+        Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, pass, type);
+        bank.addUser(customer);
+        banker.saveBankerOperations(customer);
+        System.out.println("Temporary Password: " + pass);
+        System.out.println("Customer Id: " + customer.getCustomerId() +
+                ", Account Id: " + (customer.getAccounts().stream().max(Comparator.comparing(Account::getCreatedAt)).orElse(null)).getAccountId());
+    }
+
+    private static String generateTemporaryPassword() {
+        return UUID.randomUUID().toString().substring(0, 8);
     }
 
     public static void loginMenu(Bank bank, Scanner scan) {
@@ -181,11 +259,15 @@ public class Main {
             System.out.print("Enter password: ");
             String pass = scan.nextLine();
             System.out.println();
-            User user = bank.login(username, pass);
+            User user = bank.login(username, pass, scan);
             if (user != null) {
                 System.out.println("Logged in successfully");
                 successLogin = true;
-                startMenu(scan, user);
+                if (user instanceof Customer) {
+                    startMenu(scan, user, bank);
+                } else if (user instanceof Banker){
+                    bankerStartMenu(scan, user, bank);
+                }
             } else {
                 System.out.println("Invalid username or password, please try again!");
             }

@@ -1,0 +1,24 @@
+Account ID: 9004
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-14 18:51:43
+Amount: 900.0
+Balance After Transaction: 900.00
+Done By: micheal paul
+----------------------------------------
+Account ID: 9005
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-14 18:51:53
+Amount: 200.0
+Balance After Transaction: 200.00
+Done By: micheal paul
+----------------------------------------
+Account ID: 9004
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-14 18:52:01
+Amount: 55.0
+Balance After Transaction: 845.00
+Done By: micheal paul
+----------------------------------------
