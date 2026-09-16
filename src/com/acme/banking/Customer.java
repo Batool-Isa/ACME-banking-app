@@ -88,8 +88,8 @@ public class Customer extends User implements IBankingOperations{
                     " Account Type: " + acc.getType());
         }
     }
-public String checkDeposit(Account acc, String doneBy){
-        Customer cus =Bank.getCustomerByAccountId(acc.getAccountId());
+public String checkDeposit(Account acc, String doneBy, Bank bank){
+        Customer cus =bank.getCustomerByAccountId(acc.getAccountId());
         if(cus.getFullName().equalsIgnoreCase(doneBy)){
             return "Same";
         }else{
@@ -105,13 +105,14 @@ public String checkDeposit(Account acc, String doneBy){
     }
 
     @Override
-    public double deposit(Account acc, double amount, Integer transferId, String doneBy) {
-        System.out.println("user balance before deposit: " + acc.getBalance());
+    public void deposit(Account acc, double amount, Integer transferId, String doneBy, Bank bank) {
+        //System.out.println("user balance before deposit: " + acc.getBalance());
         if (amount < 0) {
-            System.out.println("Invalid Amount!!");
-            return -1;
+            System.out.println(ConsoleColors.RED+"Invalid Amount!!"+ConsoleColors.RESET);
+            return;
         }
-        String checkOwner = checkDeposit(acc, doneBy);
+
+        String checkOwner = checkDeposit(acc, doneBy, bank);
         double limit = acc.getCard().getCardDepositLimit(checkOwner);
         double newBalance = acc.getBalance() + amount;
         acc.setBalance(newBalance);
@@ -130,8 +131,6 @@ public String checkDeposit(Account acc, String doneBy){
             //System.out.println("acc overdraft: "+acc.getOverDraftCounter());
             System.out.println("Your Account is Active Now!");
         }
-        return newBalance;
-
     }
 
     public double getUserWithdrawTotal(Account acc) {
@@ -139,33 +138,33 @@ public String checkDeposit(Account acc, String doneBy){
        return todayTransaction.stream()
                .filter(t->t.getAccountId()==acc.getAccountId() && t.getTransactionType() == Transaction.TransactionType.WITHDRAW)
                 .mapToDouble(Transaction::getAmount).sum();
-
     }
 
     @Override
-    public double withdraw(Account acc, double amount, Integer transferId) {
+    public void withdraw(Account acc, double amount, Integer transferId, Bank bank) {
         System.out.println("user balance before Withdraw: " + acc.getBalance());
         double limit = acc.getCard().getCardWithdrawLimit();
         double possibleWithdraw = amount + getUserWithdrawTotal(acc);
-        Customer cus = Bank.getCustomerByAccountId(acc.getAccountId());
+        Customer cus = bank.getCustomerByAccountId(acc.getAccountId());
         if (amount < 0) {
             System.out.println("Invalid Amount!!");
-            return -1;
+            return;
         }
         if (!acc.isActive()) {
             System.out.println("over draft num" + acc.getOverDraftCounter());
             System.out.println("Your Account is not active , please deposit moeny to resolve negative balance");
-            return -1;
+            return;
         }
         if (possibleWithdraw > limit && transferId != null) {
             System.out.println("you can't withdraw more then your allowed limit!!");
-            return -1;
+            return;
         }
         double oldBalance = acc.getBalance();
         if (oldBalance < 0) {
             if (amount > 100) {
-                System.out.println("This Transaction can't be done. You can't withdraw more than 100$ if account is negative.");
-                return -1;
+                System.out.println(ConsoleColors.RED +"Transaction declined: "+
+                        " You cannot withdraw more than 100 BHD when your account is negative."
+                        +ConsoleColors.RESET);
             } else {
                 acc.setOverDraftCounter(acc.getOverDraftCounter() + 1);
                 double balance = oldBalance - (amount);
@@ -178,7 +177,6 @@ public String checkDeposit(Account acc, String doneBy){
                 addTransaction(trans);
                 saveCustomerTransaction(trans);
                 getOverDraftPenalty(acc);
-                return balance;
             }
         } else {
 
@@ -189,15 +187,21 @@ public String checkDeposit(Account acc, String doneBy){
             Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, cus.getFullName(), balance, amount, acc.getAccountId(), transferId);
             if (transferId != null) {
                 trans.setTransferId(transferId);
+                System.out.println(ConsoleColors.GREEN +"Amount transferred successfully!" +ConsoleColors.RESET);
+                System.out.println("Your Balance for Account " +
+                        acc.getAccountId() + " :" + acc.getBalance()+" BHD");
+            }else {
+                System.out.println(ConsoleColors.GREEN
+                        +"Amount withdraw successfully."+ConsoleColors.RESET);
+                System.out.println("Your Balance for Account " +
+                        acc.getAccountId() + " :" + acc.getBalance()+" BHD");
             }
             addTransaction(trans);
             saveCustomerTransaction(trans);
-            System.out.println("Amount withdraw successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
             if (balance < 0) {
                 acc.setOverDraftCounter(acc.getOverDraftCounter() + 1);
                 getOverDraftPenalty(acc);
             }
-            return balance;
         }
     }
 
@@ -231,34 +235,36 @@ public String checkDeposit(Account acc, String doneBy){
 
     }
     @Override
-    public void transferMoney(double amount, int srcAccount, int destinationAccount) {
-        Customer srcCustomer = Bank.getCustomerByAccountId(srcAccount);
+    public void transferMoney(double amount, int srcAccount, int destinationAccount, Bank bank) {
+        Customer srcCustomer = bank.getCustomerByAccountId(srcAccount);
         int id = transferId;
         transferId++;
         if (srcCustomer != null) {
-            Customer customer = Bank.getCustomerByAccountId(destinationAccount);
+            Customer customer = bank.getCustomerByAccountId(destinationAccount);
             if (srcCustomer == customer){
                 Account src = getAccountById(srcAccount);
                 double limit = src.getCard().getCardTransferLimitToOwn();
             double total = getUserTransferTotalToOwnAccount(src);
             if(total > limit && transferId != null){
-                System.out.println("Transfer Limit to your own account reached today . try again tomorrow!!");
+                System.out.println(ConsoleColors.RED+
+                        "Transfer Limit to your own account reached for today . try again tomorrow!!"+ConsoleColors.RESET);
                 return;
             }
-                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id);
+                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id,bank );
                 Account destAccount = customer.getAccountById(destinationAccount);
-                customer.deposit(destAccount, amount, id,srcCustomer.getFullName());
+                customer.deposit(destAccount, amount, id,srcCustomer.getFullName(),bank );
             } else {
                 Account src = getAccountById(srcAccount);
                 double limit = src.getCard().getCardTransferLimit();
                 double total = getUserTransferTotal(src);
                 if(total > limit){
-                    System.out.println("Transfer Limit to different account reached today . try again tomorrow!!");
+                    System.out.println(ConsoleColors.RED+"Transfer Limit to different account reached for today ." +
+                            " try again tomorrow!!"+ ConsoleColors.RESET);
                     return;
                 }
-                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id);
+                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount),amount,id,bank);
                 Account destAccount = customer.getAccountById(destinationAccount);
-                customer.deposit(destAccount, amount, id,srcCustomer.getFullName());
+                customer.deposit(destAccount, amount, id,srcCustomer.getFullName(),bank );
             }
 
 
@@ -282,11 +288,6 @@ public String checkDeposit(Account acc, String doneBy){
 
             if (!customerFile.exists()) {
                 customerFile.createNewFile();
-
-                System.out.println(
-                        "Customer file created: "
-                                + customerFile.getAbsolutePath()
-                );
             }
 
             BufferedWriter writer =
@@ -330,7 +331,7 @@ public String checkDeposit(Account acc, String doneBy){
             writer.close();
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to save customer transaction :"+getCustomerId(), e);
         }
     }
 

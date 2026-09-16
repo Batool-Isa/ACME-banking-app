@@ -13,9 +13,9 @@ import java.time.format.DateTimeFormatter;
 
 public class Bank {
 
-    private static ArrayList<User> appUsers;
-    private static ArrayList<Customer> customerArrayList;
-    private static ArrayList<Banker> bankersList;
+    private ArrayList<User> appUsers;
+    private ArrayList<Customer> customerArrayList;
+    private ArrayList<Banker> bankersList;
 
     public Bank() {
         appUsers = new ArrayList<>();
@@ -28,11 +28,7 @@ public class Bank {
     }
 
 
-    public static ArrayList<User> getAppUsers() {
-        return appUsers;
-    }
-
-    private static void initializedUsersData() {
+    private  void initializedUsersData() {
         File file = new File("data/users.txt");
         if (file.length() == 0) {
             loadInitialUser();
@@ -42,7 +38,11 @@ public class Bank {
 
     }
 
-    private static void loadInitialUser() {
+    public boolean checkUsername(String username){
+        return this.getAppUsers().stream()
+                .anyMatch(u ->u.getUsername().equalsIgnoreCase(username));
+    }
+    private  void loadInitialUser() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("data/init.txt"));
             String line;
@@ -75,7 +75,7 @@ public class Bank {
 
     }
 
-    public static void addUserToLists(User user) {
+    public  void addUserToLists(User user) {
         appUsers.add(user);
         if (user instanceof Customer) {
             customerArrayList.add((Customer) user);
@@ -85,16 +85,17 @@ public class Bank {
         }
     }
 
-    public static void addUser(User user) {
+    public  void addUser(User user) {
         addUserToLists(user);
         addUsersToFile(user);
     }
 
-    public static void addUsersToFile(User user) {
-        System.out.println("========== DEBUG ==========");
-        System.out.println("Class: " + user.getClass().getSimpleName());
-        System.out.println("Role: " + user.getRole());
-        System.out.println("==========================");
+    public ArrayList<User> getAppUsers() {
+        return appUsers;
+    }
+
+    public  void addUsersToFile(User user) {
+
         try {
             BufferedWriter writer =
                     new BufferedWriter(new FileWriter("data/users.txt", true));
@@ -112,6 +113,7 @@ public class Bank {
                         .add(user.getLastName())
                         .add(user.getUsername())
                         .add(user.getPassword())
+                        .add(String.valueOf(customer.isFirstLogin()))
                         .add(user.getRole())
                         .toString();
 
@@ -142,7 +144,7 @@ public class Bank {
         }
     }
 
-    public static void loadUsers() {
+    public  void loadUsers() {
 
         try {
             BufferedReader reader =
@@ -154,58 +156,48 @@ public class Bank {
 
                 String[] data = line.split("\\|");
 
-                if (data.length != 7) {
-                    System.out.println("Invalid Data");
-                    break;
-                }
                 String role = data[data.length - 1];
-                if (role.equalsIgnoreCase("Banker")) {
-
-                } else {
-
-                }
                 int userId = Integer.parseInt(data[0]);
+                if (role.equalsIgnoreCase("Banker")) {
+                    if (data.length != 7) {
+                        System.out.println("Invalid Data");
+                    }
+                    int bankerId = Integer.parseInt(data[1]);
+                    Banker banker = new Banker(
+                            data[2],
+                            data[3],
+                            data[4],
+                            "",
+                            "Banker"
+                    );
 
-                switch (data[6]) {
+                    banker.setUserId(userId);
+                    banker.setPassword(data[5]);
+                    banker.setBankerId(bankerId);
 
-                    case "Banker":
-                        int bankerId = Integer.parseInt(data[1]);
+                    addUserToLists(banker);
+                } else {
+                    if (data.length != 8) {
+                        System.out.println("Invalid Data");
+                    }
+                    int customerId = Integer.parseInt(data[1]);
 
-                        Banker banker = new Banker(
-                                data[2],
-                                data[3],
-                                data[4],
-                                "",
-                                "Banker"
-                        );
+                    Customer customer = new Customer(
+                            data[2],
+                            data[3],
+                            data[4],
+                            "",
+                            "Customer"
+                    );
 
-                        banker.setUserId(userId);
-                        banker.setPassword(data[5]);
-                        banker.setBankerId(bankerId);
-                        addUserToLists(banker);
-                        break;
-
-                    case "Customer":
-                        int customerId = Integer.parseInt(data[1]);
-
-                        Customer customer = new Customer(
-                                data[2],
-                                data[3],
-                                data[4],
-                                "",
-                                "Customer"
-                        );
-
-                        customer.setUserId(userId);
-                        customer.setCustomerId(customerId);
-                        customer.setPassword(data[5]);
-
-                        addUserToLists(customer);
-                        break;
-
-                    default:
-                        System.out.println("Invalid role");
+                    customer.setUserId(userId);
+                    customer.setCustomerId(customerId);
+                    customer.setPassword(data[5]);
+                    customer.setFirstLogin(Boolean.parseBoolean(data[data.length - 2]));
+                    this.addUserToLists(customer);
                 }
+
+
             }
 
             reader.close();
@@ -217,13 +209,15 @@ public class Bank {
 
     public User login(String username, String pass, Scanner scan) {
         for (User user : appUsers) {
-            if (user.getUsername().equals(username)) {
+            if (user.getUsername().equalsIgnoreCase(username)) {
                 if (user.checkPassword(pass)) {
                     if (user instanceof Customer && ((Customer) user).isFirstLogin()) {
                         Customer customer = getcustomerbyUserId(user.getUserId());
+                        System.out.println("Login first:+ " + customer.isFirstLogin());
                         System.out.println("Your Password is temporary \n Please change the password:");
                         String password = scan.nextLine();
-                        user.setPassword(password);
+                        String hashedPassword = SecurityUtil.hashPassword(password);
+                        user.setPassword(hashedPassword);
                         customer.setFirstLogin(false);
                         Bank.updateUserInFile(customer);
                     }
@@ -259,7 +253,7 @@ public class Bank {
 
     }
 
-    public static void loadAccounts() {
+    public  void loadAccounts() {
         try {
             BufferedReader reader =
                     new BufferedReader(new FileReader("data/accounts.txt"));
@@ -280,18 +274,18 @@ public class Bank {
                 boolean isActive = Boolean.parseBoolean(values[8]);
                 int cardId = Integer.parseInt(values[9]);
                 Card.CardType cardType = Card.CardType.valueOf(values[10]);
-                int cardNumber = Integer.parseInt(values[11]);
+                String cardNumber = values[11];
 
                 LocalDate dateIssued = LocalDate.parse((values[12]));
                 LocalDate dateExpiry = LocalDate.parse(values[13]);
-                int csv = Integer.parseInt(values[14]);
+                String cvv = values[14];
 
-                Customer customer = getcustomerbyUserId(userId);
+                Customer customer = this.getcustomerbyUserId(userId);
                 if (customer != null) {
                     // Restore card
-                    Card card = new Card(cardType, cardNumber, csv);
-                    card.setCvs(csv);
-                    card.setCardNumber(cardNumber);
+                    Card card = new Card(cardType);
+                    card.setCvv(cvv);
+                    card.setCardNumber(String.valueOf(cardNumber));
                     card.setDateIssued(dateIssued);
                     card.setExpiryDate(dateExpiry);
                     card.setCardId(cardId);
@@ -321,7 +315,7 @@ public class Bank {
         }
     }
 
-    public static void loadTransactions() {
+    public  void loadTransactions() {
 
         for (Customer customer : customerArrayList) {
             File customerFile = new File(
@@ -456,7 +450,7 @@ public class Bank {
         return null;
     }
 
-    public static Customer getcustomerbyUserId(int userId) {
+    public  Customer getcustomerbyUserId(int userId) {
         return customerArrayList.stream()
                 .filter(cus -> cus.getUserId() == userId)
                 .findFirst().orElse(null);
@@ -468,9 +462,9 @@ public class Bank {
                 .findFirst().orElse(null);
     }
 
-    public static Customer getCustomerByAccountId(int accountId) {
+    public  Customer getCustomerByAccountId(int accountId) {
 
-        for (Customer customer : customerArrayList) {
+        for (Customer customer : this.customerArrayList) {
 
             Account account = customer.getAccountById(accountId);
 
@@ -510,6 +504,7 @@ public class Bank {
                                 user.getLastName(),
                                 user.getUsername(),
                                 user.getPassword(),
+                                String.valueOf(customer.isFirstLogin()),
                                 user.getRole()
                         );
 

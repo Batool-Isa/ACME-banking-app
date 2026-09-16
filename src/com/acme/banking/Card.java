@@ -1,14 +1,15 @@
 package com.acme.banking;
 
 import java.time.LocalDate;
+import java.util.Random;
 
 public class Card {
     private int cardId;
     private CardType type;
-    private int cardNumber;
+    private String cardNumber;
     private LocalDate dateIssued;
     private LocalDate expiryDate;
-    private int cvs;
+    private String cvv;
     private int accountId;
     int idStart = 100;
 
@@ -18,14 +19,14 @@ public class Card {
         MASTERCARD_PLATINUM
     }
 
-    public Card(CardType type, int cardNumber, int cvs) {
+    public Card(CardType type) {
         idStart++;
         this.cardId = idStart;
         this.type = type;
-        this.cardNumber = cardNumber;
+        this.cardNumber = generateRandomCardNumber();
         this.dateIssued = LocalDate.now();
         this.expiryDate = LocalDate.now().plusYears(5);
-        this.cvs = cvs;
+        this.cvv = generateRandomCVV();
     }
 
     public int getCardId() {
@@ -44,11 +45,11 @@ public class Card {
         this.type = type;
     }
 
-    public int getCardNumber() {
+    public String getCardNumber() {
         return cardNumber;
     }
 
-    public void setCardNumber(int cardNumber) {
+    public void setCardNumber(String cardNumber) {
         this.cardNumber = cardNumber;
     }
 
@@ -68,12 +69,12 @@ public class Card {
         this.expiryDate = expiryDate;
     }
 
-    public int getCvs() {
-        return cvs;
+    public String getCvv() {
+        return cvv;
     }
 
-    public void setCvs(int cvs) {
-        this.cvs = cvs;
+    public void setCvv(String cvv) {
+        this.cvv = cvv;
     }
 
     public int getAccountId() {
@@ -84,6 +85,22 @@ public class Card {
         this.accountId = accountId;
     }
 
+    public static String generateRandomCardNumber(){
+        Random random = new Random();
+        StringBuilder cardNum = new StringBuilder();
+        for(int i=0; i < 16 ;i++){
+            cardNum.append(random.nextInt(10));
+        }
+        return cardNum.toString();
+    }
+    public static String generateRandomCVV(){
+        Random random = new Random();
+        StringBuilder cvv = new StringBuilder();
+        for(int i=0; i < 3 ;i++){
+            cvv.append(random.nextInt(10));
+        }
+        return cvv.toString();
+    }
     public double getCardWithdrawLimit() {
         switch (type) {
             case MASTERCARD -> {

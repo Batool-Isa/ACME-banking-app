@@ -2,7 +2,7 @@ package com.acme.banking;
 
 import java.time.LocalDateTime;
 
-public abstract class User{
+public abstract class User {
     private int userId;
     private String firstName;
     private String lastName;
@@ -12,6 +12,7 @@ public abstract class User{
     private int failedLoginAttempts;
     private LocalDateTime lockedUntil;
     private static int idStart = 1006;
+
     public User(String firstName, String lastName, String username, String password, String role) {
         idStart++;
         this.userId = idStart;
@@ -59,17 +60,19 @@ public abstract class User{
     public String getPassword() {
         return password;
     }
-    public boolean checkPassword(String pass){
+
+    public boolean checkPassword(String pass) {
         return SecurityUtil.verifyPassword(pass, getPassword());
     }
+
     public void setPassword(String password) {
         this.password = password;
     }
 
     public String getRole() {
-        if (role.equalsIgnoreCase("Banker")){
+        if (role.equalsIgnoreCase("Banker")) {
             return "Banker";
-        }else {
+        } else {
             return "Customer";
         }
     }
@@ -94,16 +97,10 @@ public abstract class User{
         this.lockedUntil = lockedUntil;
     }
 
-    public boolean login(String username, String pass){
+    public boolean login(String username, String pass) {
 
         return (username.equals(this.username) && pass.equals(this.password));
     }
-    public static void validateName(String name){
-    if (name.length() < 3){
-        System.out.println("Name Can't be less than 3 characters!");
-    }
-    }
-
 
     @Override
     public String toString() {
@@ -112,7 +109,8 @@ public abstract class User{
                 ", Username: " + username +
                 ", Role: " + (role);
     }
+
     public String getFullName() {
-        return  firstName + " " + lastName ;
+        return firstName + " " + lastName;
     }
 }

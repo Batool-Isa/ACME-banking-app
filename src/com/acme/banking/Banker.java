@@ -27,16 +27,13 @@ public class Banker extends User {
     public void saveBankerOperations(Customer customer) {
 
         File folder = new File("data/bankerFiles");
-
         if (!folder.exists()) {
             folder.mkdir();
         }
-
         File customerFile = new File(
                 folder,
                 "Banker-" + this.getFullName() + "-" + this.getBankerId()
         );
-
         try {
             if (!customerFile.exists()) {
                 customerFile.createNewFile();

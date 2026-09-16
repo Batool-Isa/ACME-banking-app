@@ -1,24 +1,11 @@
 package com.acme.banking;
-
 import java.util.*;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-
 public class Main {
-
     public static void startMenu(Scanner scan, User user, Bank bank) {
         boolean continueMenu = true;
         while (continueMenu) {
-            System.out.println("\n====== Welcome " + user.getFullName() + "! ======");
-            System.out.println("Choose the operation you want to do:");
-            System.out.println("1- Create new banking account");
-            System.out.println("2- Deposit Money");
-            System.out.println("3- Withdraw Money");
-            System.out.println("4- Transfer Money");
-            System.out.println("5- Print Detailed Account Statement");
-            System.out.println("6- Filter Transaction");
-            System.out.println("7- Change Card Type");
-            System.out.println("8- Exit");
+            printCustomerMenu(user);
             String userInput = scan.nextLine().toLowerCase();
             ArrayList<Account> accounts = Bank.getCustomerAccounts(user);
             Customer customer = bank.getcustomerbyUserId(user.getUserId());
@@ -30,125 +17,251 @@ public class Main {
                     break;
                 case "2":
                 case "deposit":
-                    System.out.println("Choose the account you want to deposit money to.");
-                    customer.printAccount(accounts);
-                    boolean valid = false;
-                    do {
-                        System.out.print("Enter the account ID:");
-                        int accountId = scan.nextInt();
-                        Account account = bank.getAccount(accountId);
-                        if (account != null) {
-                            System.out.print("Enter the amount you want to deposit:");
-                            int amount = scan.nextInt();
-                            customer.deposit(account, amount, null, user.getFullName());
-                            valid = true;
-                        } else {
-                            System.out.println("Invalid Account ID!!!!");
-                        }
-                    } while (!valid);
-                    scan.nextLine();
+                    depositMenu(scan, customer, accounts, bank, user);
                     break;
                 case "3":
                 case "withdraw":
-                    System.out.println("Choose the account you want to withdraw money to.");
-                    customer.printAccount(accounts);
-
-                    System.out.print("Enter the account ID: ");
-                    int accountId2 = scan.nextInt();
-                    System.out.print("Enter the amount you want to withdraw: ");
-                    int amount2 = scan.nextInt();
-                    Account account2 = ((Customer) user).getAccountById(accountId2);
-                    if (account2 == null) {
-                        System.out.println("Invalid Account ID!!!!");
-                        scan.nextLine();
-                        break;
-                    }
-                    customer.withdraw(account2, amount2, null);
-                    scan.nextLine();
+                    withdrawMenu(scan, customer, accounts, bank, user);
                     break;
                 case "4":
                 case "transfer":
-                    System.out.println("Choose the account you want to transfer money from:");
-                    customer.printAccount(accounts);
-                    boolean validId = false;
-                    do {
-                        System.out.print("Enter the account ID:");
-                        int srcAccountId = scan.nextInt();
-                        Account srcAccount = (customer.getAccountById(srcAccountId));
-                        if (srcAccount != null) {
-                            System.out.println("Enter the recipient account ID:");
-                            int recipientAccId = scan.nextInt();
-                            Customer recipientCustomer =
-                                    Bank.getCustomerByAccountId(recipientAccId);
-                            if (recipientCustomer == null) {
-                                System.out.println("Invalid recipient account ID!!!!");
-                                continue;
-                            }
-                            System.out.println("Enter the amount you want to transfer:");
-                            int transferAmount = scan.nextInt();
-                            customer.transferMoney(transferAmount, srcAccountId, recipientAccId);
-                            validId = true;
-                        } else {
-                            System.out.println("Invalid Account ID!!!!");
-                        }
-                    } while (!validId);
-                    scan.nextLine();
+                    transferMenu(scan, customer, accounts, bank);
                     break;
                 case "5":
                 case "statement":
-                    System.out.println("Choose the account you want to withdraw money to.");
-                    customer.printAccount(accounts);
-                    System.out.print("Enter the account ID: ");
-                    int accountId3 = scan.nextInt();
-                    Account account = (customer.getAccountById(accountId3));
-                    customer.getDetailedAccountStatment(account);
-                    scan.nextLine();
+                    statementMenu(scan, customer, accounts);
                     break;
                 case "6":
                 case "filter":
-                    System.out.println("-----Filter Transaction----");
-                    System.out.println("1. Today\n" +
-                            "2. Yesterday\n" +
-                            "3. Last Week\n" +
-                            "4. Last 7 Days\n" +
-                            "5. Last Month\n" +
-                            "6. Last 30 Days\n" +
-                            "7. Specific Date\n" +
-                            "8. Date & Time\n" +
-                            "9. Back");
-                    System.out.print("Enter your choice:");
-                    String filterChoice = scan.nextLine();
-                    customer.printTransactionDetails(customer.filterTransaction(filterChoice, scan));
+                    filterMenu(scan, customer);
                     break;
                 case "7":
                 case "change":
                 case "card":
-                    System.out.println("Choose the account you want to withdraw money to.");
-                    customer.printAccount(accounts);
-                    System.out.print("Enter the account ID: ");
-                    int accountId4 = scan.nextInt();
-                    scan.nextLine();
-                    Account userAccount = (customer.getAccountById(accountId4));
-                    userAccount.changeCardType(userAccount, scan);
+                    changeCardMenu(scan, customer, accounts);
                     break;
                 case "8":
                 case "logout":
                 case "exit":
+                    System.out.println();
+                    System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
+                            "Thank you for banking with ACME Bank!" +
+                            ConsoleColors.RESET);
+                    System.out.println();
                     continueMenu = false;
                     return;
             }
         }
-
     }
+    public static void printCustomerMenu(User user) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "        Welcome " + user.getFullName() + "!" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD +
+                "Please select an operation:" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(" 1 - Create New Banking Account");
+        System.out.println(" 2 - Deposit Money");
+        System.out.println(" 3 - Withdraw Money");
+        System.out.println(" 4 - Transfer Money");
+        System.out.println(" 5 - Account Statement");
+        System.out.println(" 6 - Filter Transactions");
+        System.out.println(" 7 - Change Card Type");
+        System.out.println(" 8 - Exit");
+        System.out.println();
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter your choice: " +
+                ConsoleColors.RESET);
+    }
+    public static void depositMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank, User user) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== DEPOSIT MONEY ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        customer.printAccount(accounts);
+        boolean valid = false;
+        do {
+            System.out.println();
+            System.out.print(ConsoleColors.YELLOW +
+                    "Enter the account ID: " +
+                    ConsoleColors.RESET);
+            int accountId = scan.nextInt();
+            Account account = bank.getAccount(accountId);
+            if (account != null) {
+                System.out.print(ConsoleColors.YELLOW +
+                        "Enter the amount you want to deposit: " +
+                        ConsoleColors.RESET);
+                int amount = scan.nextInt();
+                customer.deposit(
+                        account,
+                        amount,
+                        null,
+                        user.getFullName(),
+                        bank
+                );
+                valid = true;
+            } else {
+                System.out.println(ConsoleColors.RED +
+                        "Invalid Account ID. Please try again." +
+                        ConsoleColors.RESET);
+            }
+        } while (!valid);
+        scan.nextLine();
+    }
+    public static void withdrawMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank, User user) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== WITHDRAW MONEY ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        customer.printAccount(accounts);
+        System.out.println();
+        System.out.print(ConsoleColors.YELLOW +
+                "Enter the account ID: " +
+                ConsoleColors.RESET);
+        int accountId2 = scan.nextInt();
+        Account account2 = ((Customer) user).getAccountById(accountId2);
+        if (account2 == null) {
+            System.out.println();
+            System.out.println(ConsoleColors.RED +
+                    "Invalid Account ID. Please try again." +
+                    ConsoleColors.RESET);
+            scan.nextLine();
+            return;
+        }
+        System.out.print(ConsoleColors.YELLOW +
+                "Enter the amount you want to withdraw: " +
+                ConsoleColors.RESET);
+        int amount2 = scan.nextInt();
 
+        customer.withdraw(account2, amount2, null, bank);
+        scan.nextLine();
+    }
+    public static void transferMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== TRANSFER MONEY ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        customer.printAccount(accounts);
+        boolean validId = false;
+        do {
+            System.out.println();
+            System.out.print(ConsoleColors.YELLOW +
+                    "Enter the account ID: " +
+                    ConsoleColors.RESET);
+            int srcAccountId = scan.nextInt();
+            Account srcAccount =
+                    (customer.getAccountById(srcAccountId));
+            if (srcAccount != null) {
+                System.out.print(ConsoleColors.YELLOW +
+                        "Enter the recipient account ID: " +
+                        ConsoleColors.RESET);
+                int recipientAccId = scan.nextInt();
+                Customer recipientCustomer =
+                        bank.getCustomerByAccountId(recipientAccId);
+                if (recipientCustomer == null) {
+                    System.out.println(ConsoleColors.RED +
+                            "Invalid recipient account ID. Please try again." +
+                            ConsoleColors.RESET);
+                    continue;
+                }
+                System.out.print(ConsoleColors.YELLOW +
+                        "Enter the amount you want to transfer: " +
+                        ConsoleColors.RESET);
+                int transferAmount = scan.nextInt();
+                customer.transferMoney(
+                        transferAmount,
+                        srcAccountId,
+                        recipientAccId,
+                        bank
+                );
+                validId = true;
+            } else {
+                System.out.println(ConsoleColors.RED +
+                        "Invalid Account ID. Please try again." +
+                        ConsoleColors.RESET);
+            }
+        } while (!validId);
+        scan.nextLine();
+    }
+    public static void statementMenu(Scanner scan, Customer customer, ArrayList<Account> accounts) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== ACCOUNT STATEMENT ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        customer.printAccount(accounts);
+        System.out.println();
+        System.out.print(ConsoleColors.YELLOW +
+                "Enter the account ID: " +
+                ConsoleColors.RESET);
+        int accountId3 = scan.nextInt();
+        Account account =
+                (customer.getAccountById(accountId3));
+        customer.getDetailedAccountStatment(account);
+        scan.nextLine();
+    }
+    public static void filterMenu(Scanner scan, Customer customer) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== FILTER TRANSACTIONS ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(
+                ConsoleColors.YELLOW +
+                        """
+                                1. Today
+                                2. Yesterday
+                                3. Last Week
+                                4. Last 7 Days
+                                5. Last Month
+                                6. Last 30 Days
+                                7. Specific Date
+                                8. Date & Time
+                                9. Back
+                                """ +
+                        ConsoleColors.RESET
+        );
+        System.out.print(ConsoleColors.BOLD +
+                "Enter your choice: " +
+                ConsoleColors.RESET);
+        String filterChoice = scan.nextLine();
+        customer.printTransactionDetails(
+                customer.filterTransaction(filterChoice, scan)
+        );
+    }
+    public static void changeCardMenu(Scanner scan, Customer customer, ArrayList<Account> accounts) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== CHANGE CARD TYPE ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        customer.printAccount(accounts);
+        System.out.println();
+        System.out.print(ConsoleColors.YELLOW +
+                "Enter the account ID: " +
+                ConsoleColors.RESET);
+        int accountId4 = scan.nextInt();
+        scan.nextLine();
+        Account userAccount =
+                (customer.getAccountById(accountId4));
+        userAccount.changeCardType(userAccount, scan);
+    }
     public static void bankerStartMenu(Scanner scan, User user, Bank bank) {
         boolean continueMenu = true;
         while (continueMenu) {
-            System.out.println("\n====== Welcome " + user.getFullName() + "! ======");
-            System.out.println("Choose the operation you want to do:");
-            System.out.println("1- Add new customer");
-            System.out.println("2- View Customer History");
-            System.out.println("3- Exit");
+            printBankerMenu(user);
             String userInput = scan.nextLine().toLowerCase();
             switch (userInput) {
                 case "1":
@@ -159,137 +272,237 @@ public class Main {
                 case "2":
                 case "view":
                 case "history":
-                    System.out.println("Enter the customer id: ");
-                    int customerId = scan.nextInt();
-                    scan.nextLine();
-                    Customer customer = bank.getCustomerByCustomerId(customerId);
-
-                   for (Account acc: customer.getAccounts() ){
-                       customer.getDetailedAccountStatment(acc);
-
-                   }
-
+                    customerHistoryMenu(scan, bank);
                     break;
                 case "3":
                 case "logout":
                 case "exit":
+                    System.out.println();
+                    System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
+                            "Thank you for using ACME Bank!" +
+                            ConsoleColors.RESET);
+                    System.out.println();
                     continueMenu = false;
                     return;
             }
         }
-
     }
-
-
+    public static void printBankerMenu(User user) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "        Welcome " + user.getFullName() + "!" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD +
+                "Please select an operation:" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(" 1 - Add New Customer");
+        System.out.println(" 2 - View Customer History");
+        System.out.println(" 3 - Exit");
+        System.out.println();
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter your choice: " +
+                ConsoleColors.RESET);
+    }
+    public static void customerHistoryMenu(Scanner scan, Bank bank) {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== CUSTOMER HISTORY ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.print(ConsoleColors.YELLOW +
+                "Enter the customer ID: " +
+                ConsoleColors.RESET);
+        int customerId = scan.nextInt();
+        scan.nextLine();
+        Customer customer = bank.getCustomerByCustomerId(customerId);
+        for (Account acc : customer.getAccounts()) {
+            customer.getDetailedAccountStatment(acc);
+        }
+    }
     public static void createAccountMenu(Scanner scan, User user) {
         String type;
         do {
-            System.out.println("==== Choose Account Type: ====");
-            System.out.println("A- Checking");
-            System.out.println("B- Saving");
-            System.out.println("Enter your Choice :");
+            System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN + "========== CHOOSE ACCOUNT TYPE ==========" + ConsoleColors.RESET);
+            System.out.println("A - Checking");
+            System.out.println("B - Saving");
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter your choice: " + ConsoleColors.RESET);
             String input = scan.nextLine().toLowerCase();
             type = Account.validateAccountType(input);
         } while (type == null);
         Account acc = Account.createAccount(type, user);
-
-        System.out.println("New " + type + " Account Created Successfully! \n" +
-                "Your Account Number: " + acc.getAccountId());
-        System.out.println("Please create a password for this account.");
+        if (acc == null) {
+            return;
+        }
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN + "New " + type + " Account Created Successfully!" + ConsoleColors.RESET);
+        System.out.println("Your Account Number: " + acc.getAccountId());
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Please create a password for this account: " + ConsoleColors.RESET);
         String pass = scan.nextLine();
         acc.setPassword(SecurityUtil.hashPassword(pass));
-
     }
-
-
     public static void signUpMenu(Bank bank, Scanner scan) {
         // add input validation later
-        System.out.print("Enter Username:");
-        String customerUsername = scan.nextLine().trim();
-        System.out.print("Enter your first name:");
-        String firstName = scan.nextLine().trim();
-        System.out.print("Enter your last name:");
-        String lastName = scan.nextLine().trim();
-        System.out.print("Enter password: ");
-        String password = scan.nextLine();
-        System.out.print("""
-                Choose Account Type\s
-                A- Checking\s
-                B- Saving\s
-                """);
+        String customerUsername;
+        boolean exist = true;
+        do {
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter Username: " + ConsoleColors.RESET);
+            customerUsername = scan.nextLine().trim();
+            if (bank.checkUsername(customerUsername)) {
+                System.out.println(ConsoleColors.RED + "Username already in use. Please choose another username." + ConsoleColors.RESET);
+            } else {
+                exist = false;
+            }
+        } while (exist);
+        String firstName;
+        boolean validFirstName = false;
+        do {
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter your first name: " + ConsoleColors.RESET);
+            firstName = scan.nextLine().trim();
+            if (firstName.isEmpty()) {
+                System.out.println(ConsoleColors.RED + "First name cannot be empty." + ConsoleColors.RESET);
+            } else if (!firstName.matches("[a-zA-Z ]+")) {
+                System.out.println(ConsoleColors.RED + "First name should only contain letters." + ConsoleColors.RESET);
+            } else if (firstName.length() < 3) {
+                System.out.println(ConsoleColors.RED + "First name must contain at least 3 letters." + ConsoleColors.RESET);
+            } else {
+                validFirstName = true;
+            }
+        } while (!validFirstName);
+        String lastName;
+        boolean validlastName = false;
+        do {
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter your last name: " + ConsoleColors.RESET);
+            lastName = scan.nextLine().trim();
+            if (lastName.isEmpty()) {
+                System.out.println(ConsoleColors.RED + "Last name cannot be empty." + ConsoleColors.RESET);
+            } else if (!lastName.matches("[a-zA-Z ]+")) {
+                System.out.println(ConsoleColors.RED + "Last name should only contain letters." + ConsoleColors.RESET);
+            } else if (lastName.length() < 3) {
+                System.out.println(ConsoleColors.RED + "Last name must contain at least 3 letters." + ConsoleColors.RESET);
+            } else {
+                validlastName = true;
+            }
+        } while (!validlastName);
+        String password;
+        boolean validPassword = false;
+        do {
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter password: " + ConsoleColors.RESET);
+            password = scan.nextLine();
+            if (password.isBlank()) {
+                System.out.println(ConsoleColors.RED + "Password cannot be empty." + ConsoleColors.RESET);
+            } else if (password.length() < 8) {
+                System.out.println(ConsoleColors.RED + "Password must be at least 8 characters." + ConsoleColors.RESET);
+            } else {
+                validPassword = true;
+            }
+        } while (!validPassword);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN + "========== CHOOSE ACCOUNT TYPE ==========" + ConsoleColors.RESET);
+        System.out.println("A - Checking");
+        System.out.println("B - Saving");
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW + "Enter your choice: " + ConsoleColors.RESET);
         String type = scan.nextLine().toLowerCase();
         Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, password, type);
         bank.addUser(customer);
-        System.out.println("Congrats, Your Banking Account Created Successfully!");
-        System.out.println("Your username: " + customer.getUsername() + " & customer Id: " + customer.getCustomerId());
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN + "Account created successfully!" + ConsoleColors.RESET);
+        System.out.println("Username: " + customer.getUsername());
+        System.out.println("Customer ID: " + customer.getCustomerId());
     }
-
-    public static void addCustomerMenu(Bank bank, Scanner scan, Banker banker) {
-        // add input validation later
-        System.out.print("Enter Customer Username:");
-        String customerUsername = scan.nextLine().trim();
-        System.out.print("Enter Customer first name:");
-        String firstName = scan.nextLine().trim();
-        System.out.print("Enter Customer last name:");
-        String lastName = scan.nextLine().trim();
-        String pass = generateTemporaryPassword();
-        System.out.print("""
-                Choose Account Type\s
-                A- Checking\s
-                B- Saving\s
-                """);
-        String type = scan.nextLine().toLowerCase();
-        Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, pass, type);
-        bank.addUser(customer);
-        banker.saveBankerOperations(customer);
-        System.out.println("Temporary Password: " + pass);
-        System.out.println("Customer Id: " + customer.getCustomerId() +
-                ", Account Id: " + (customer.getAccounts().stream().max(Comparator.comparing(Account::getCreatedAt)).orElse(null)).getAccountId());
-    }
-
     private static String generateTemporaryPassword() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
-
+    public static void addCustomerMenu(Bank bank, Scanner scan, Banker banker) {
+        // add input validation later
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== ADD NEW CUSTOMER ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter Customer Username: " +
+                ConsoleColors.RESET);
+        String customerUsername = scan.nextLine().trim();
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter Customer First Name: " +
+                ConsoleColors.RESET);
+        String firstName = scan.nextLine().trim();
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter Customer Last Name: " +
+                ConsoleColors.RESET);
+        String lastName = scan.nextLine().trim();
+        String pass = generateTemporaryPassword();
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== CHOOSE ACCOUNT TYPE ==========" +
+                ConsoleColors.RESET);
+        System.out.println("A - Checking");
+        System.out.println("B - Saving");
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter your choice: " +
+                ConsoleColors.RESET);
+        String type = scan.nextLine().toLowerCase();
+        Customer customer = Customer.createCustomer(firstName, lastName, customerUsername, pass, type);
+        customer.setFirstLogin(true);
+        bank.addUser(customer);
+        banker.saveBankerOperations(customer);
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
+                "Customer account created successfully!" +
+                ConsoleColors.RESET);
+        System.out.println("Temporary Password: " + pass);
+        System.out.println("Customer ID: " + customer.getCustomerId());
+        System.out.println("Account ID: " +
+                (customer.getAccounts().stream()
+                        .max(Comparator.comparing(Account::getCreatedAt))
+                        .orElse(null)).getAccountId());
+    }
     public static void loginMenu(Bank bank, Scanner scan) {
         boolean successLogin = false;
         do {
-            System.out.print("Enter Username: ");
+            System.out.println();
+            System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                    "========== LOGIN ==========" +
+                    ConsoleColors.RESET);
+            System.out.println();
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                    "Enter Username: " +
+                    ConsoleColors.RESET);
             String username = scan.nextLine();
-            System.out.print("Enter password: ");
+            System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                    "Enter Password: " +
+                    ConsoleColors.RESET);
             String pass = scan.nextLine();
             System.out.println();
             User user = bank.login(username, pass, scan);
             if (user != null) {
-                System.out.println("Logged in successfully");
+                // System.out.println("Logged in successfully");
                 successLogin = true;
                 if (user instanceof Customer) {
                     startMenu(scan, user, bank);
-                } else if (user instanceof Banker){
+                } else if (user instanceof Banker) {
                     bankerStartMenu(scan, user, bank);
                 }
             } else {
-                System.out.println("Invalid username or password, please try again!");
+                System.out.println(ConsoleColors.RED +
+                        "Invalid username or password. Please try again." +
+                        ConsoleColors.RESET);
             }
         } while (!successLogin);
-
-
     }
-
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
-
         Bank bank = new Bank();
         boolean exitProgram = false;
         do {
-            System.out.println("\u001B[36m====== ACME BANKING APP ======\u001B[0m");
-            // System.out.println("====== Welcome to ACME Banking App! ======");
-            System.out.println("Choose the operation you want to do:");
-            System.out.println("1- Login");
-            System.out.println("2- SignUp");
-            System.out.println("3- Exit");
-            String userInput = scan.nextLine().toLowerCase();
-
+            printMainMenu();
+            String userInput = scan.nextLine();
             switch (userInput) {
                 case "1":
                 case "login":
@@ -309,6 +522,24 @@ public class Main {
             }
         } while (!exitProgram);
     }
+    public static void printMainMenu() {
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "           ACME BANKING APP" +
+                ConsoleColors.RESET);
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========================================" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println("Please choose an option:");
+        System.out.println();
+        System.out.println("  1. Login");
+        System.out.println("  2. Sign Up");
+        System.out.println("  3. Exit");
+        System.out.println();
+        System.out.print("Enter your choice: ");
+    }
 }
-
-

@@ -107,7 +107,17 @@ public class Account {
     }
 
     public static Account createAccount(String type, User user) {
-        Card card = new Card(Card.CardType.MASTERCARD, 900033, 123);
+        Customer customer = (Customer) user;
+        if(customer.getAccounts().size() >= 3){
+            System.out.println();
+            System.out.println(ConsoleColors.RED +
+                    "You cannot have more than 3 accounts." +
+                    ConsoleColors.RESET);
+            System.out.println();
+
+            return null;
+        }
+        Card card = new Card(Card.CardType.MASTERCARD);
         Account acc = new Account(validateAccountType(type), 0, card);
         ((Customer) user).addAccount(acc);
         saveAccountsToFile(user, acc);
@@ -120,7 +130,9 @@ public class Account {
                 !type.equals("saving") &&
                 !type.equals("b") &&
                 !type.equals("checking")) {
-            System.out.println("Invalid Input !! please try again");
+            System.out.println(ConsoleColors.RED +
+                    "Invalid account type. Please try again." +
+                    ConsoleColors.RESET);
             return null;
         }
         if (type.equals("a") || type.equals("checking")) {
@@ -149,7 +161,7 @@ public class Account {
                     .add(String.valueOf(acc.getCard().getCardNumber()))
                     .add(String.valueOf(acc.getCard().getDateIssued()))
                     .add(String.valueOf(acc.getCard().getExpiryDate()))
-                    .add(String.valueOf(acc.getCard().getCvs())));
+                    .add(String.valueOf(acc.getCard().getCvv())));
 
             writer.write(linesToAppend);
             writer.newLine();
@@ -240,11 +252,22 @@ public class Account {
 
     public void changeCardType(Account acc, Scanner scan) {
         Card card = acc.getCard();
-        System.out.println("Your Current Card Type: " + card.getType());
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                "========== CHANGE CARD TYPE ==========" +
+                ConsoleColors.RESET);
+        System.out.println();
+        System.out.println(ConsoleColors.YELLOW +
+                "Current Card Type: " + card.getType() +
+                ConsoleColors.RESET);
         ArrayList<Card.CardType> types = Arrays.stream(Card.CardType.values())
                 .filter(t -> !t.equals(acc.getCard().getType()))
                 .collect(Collectors.toCollection(ArrayList::new));
-        System.out.println("Choose the new type:" + types);
+        System.out.println();
+        System.out.println("Available Card Types: " + types);
+        System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
+                "Enter the new card type: " +
+                ConsoleColors.RESET);
 
         String input = scan.nextLine();
         if (input.equalsIgnoreCase(String.valueOf(Card.CardType.MASTERCARD))) {
@@ -259,7 +282,11 @@ public class Account {
             modifyAccountCard(acc.getCard().getType(), acc.getAccountId());
 
         }
-        System.out.println("Your new Card Type: " + card.getType());
+        System.out.println();
+        System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
+                "Your new Card Type: " + card.getType() +
+                ConsoleColors.RESET);
+        System.out.println();
 
     }
 }

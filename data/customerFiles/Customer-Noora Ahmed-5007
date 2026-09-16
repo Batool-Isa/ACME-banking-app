@@ -1,0 +1,26 @@
+Account ID: 9002
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-16 12:55:51
+Amount: 90.0
+Balance After Transaction: -90.00
+Done By: Noora Ahmed
+Transfer Id: 60000
+----------------------------------------
+Account ID: 9002
+Transaction ID: 100001
+Type: OVERDRAFT_PENALTY
+Date: 2026-09-16 12:55:51
+Amount: 35.0
+Balance After Transaction: -125.00
+Done By: Noora Ahmed
+----------------------------------------
+Account ID: 9002
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-16 12:59:55
+Amount: 20.0
+Balance After Transaction: -105.00
+Done By: Batool Isa
+Transfer Id: 60000
+----------------------------------------

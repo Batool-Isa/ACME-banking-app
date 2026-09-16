@@ -13,8 +13,7 @@ public class SecurityUtil {
     }
 
     public static boolean verifyPassword(String pass, String hashedPass) {
-        boolean result = Password.check(pass, hashedPass).addPepper("shared-secret")
+        return Password.check(pass, hashedPass).addPepper("shared-secret")
                 .withArgon2();
-        return result;
     }
 }
