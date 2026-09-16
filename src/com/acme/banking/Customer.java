@@ -11,10 +11,11 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-public class Customer extends User implements IBankingOperations{
+public class Customer extends User implements IBankingOperations {
     private int customerId;
     private ArrayList<Account> accounts;
     private ArrayList<Transaction> transactionsList;
@@ -88,18 +89,24 @@ public class Customer extends User implements IBankingOperations{
                     " Account Type: " + acc.getType());
         }
     }
-public String checkDeposit(Account acc, String doneBy, Bank bank){
-        Customer cus =bank.getCustomerByAccountId(acc.getAccountId());
-        if(cus.getFullName().equalsIgnoreCase(doneBy)){
-            return "Same";
-        }else{
-            return "Differnet";
+
+    public String checkDeposit(Account acc, String doneBy, Bank bank) {
+        Customer cus = bank.getCustomerByAccountId(acc.getAccountId());
+        if (cus != null) {
+            if (cus.getFullName().equalsIgnoreCase(doneBy)) {
+                return "Same";
+            } else {
+                return "Different";
+            }
         }
-}
+return null;
+    }
+
     public double getUserDepositTotal(Account acc) {
         ArrayList<Transaction> todayTransaction = filterTodayTransaction();
         return todayTransaction.stream()
-                .filter(t->t.getAccountId()==acc.getAccountId() && t.getTransactionType() == Transaction.TransactionType.DEPOSIT)
+                .filter(t -> t.getAccountId() == acc.getAccountId()
+                        && t.getTransactionType() == Transaction.TransactionType.DEPOSIT)
                 .mapToDouble(Transaction::getAmount).sum();
 
     }
@@ -107,13 +114,22 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
     @Override
     public void deposit(Account acc, double amount, Integer transferId, String doneBy, Bank bank) {
         //System.out.println("user balance before deposit: " + acc.getBalance());
-        if (amount < 0) {
-            System.out.println(ConsoleColors.RED+"Invalid Amount!!"+ConsoleColors.RESET);
+        if (amount <= 0) {
+            System.out.println(ConsoleColors.RED + "Invalid Amount!!" + ConsoleColors.RESET);
             return;
         }
 
         String checkOwner = checkDeposit(acc, doneBy, bank);
         double limit = acc.getCard().getCardDepositLimit(checkOwner);
+        double possibleDeposit = amount + getUserDepositTotal(acc);
+        if (checkOwner.equalsIgnoreCase("Same")
+                && (possibleDeposit > limit) && transferId == null) {
+            System.out.println(ConsoleColors.RED +
+                    "Daily deposit to your own account limit reached. Please try again tomorrow."
+                    + ConsoleColors.RESET);
+            return;
+
+        }
         double newBalance = acc.getBalance() + amount;
         acc.setBalance(newBalance);
         Transaction trans = new Transaction(Transaction.TransactionType.DEPOSIT, doneBy, newBalance, amount, acc.getAccountId(), transferId);
@@ -122,7 +138,7 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
         }
         addTransaction(trans);
         saveCustomerTransaction(trans);
-        if(transferId == null){
+        if (transferId == null) {
             System.out.println("Amount deposit successfully. Your Balance for Account " + acc.getAccountId() + " :" + acc.getBalance());
         }
         if (!acc.isActive() && newBalance >= 0) {
@@ -135,36 +151,38 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
 
     public double getUserWithdrawTotal(Account acc) {
         ArrayList<Transaction> todayTransaction = filterTodayTransaction();
-       return todayTransaction.stream()
-               .filter(t->t.getAccountId()==acc.getAccountId() && t.getTransactionType() == Transaction.TransactionType.WITHDRAW)
+        return todayTransaction.stream()
+                .filter(t -> t.getAccountId() == acc.getAccountId() && t.getTransactionType() == Transaction.TransactionType.WITHDRAW)
                 .mapToDouble(Transaction::getAmount).sum();
     }
 
     @Override
     public void withdraw(Account acc, double amount, Integer transferId, Bank bank) {
-        System.out.println("user balance before Withdraw: " + acc.getBalance());
+        //System.out.println("user balance before Withdraw: " + acc.getBalance());
         double limit = acc.getCard().getCardWithdrawLimit();
         double possibleWithdraw = amount + getUserWithdrawTotal(acc);
         Customer cus = bank.getCustomerByAccountId(acc.getAccountId());
-        if (amount < 0) {
-            System.out.println("Invalid Amount!!");
+        if (amount <= 0) {
+            System.out.println(ConsoleColors.RED + "Invalid Amount!!" + ConsoleColors.RESET);
             return;
         }
         if (!acc.isActive()) {
-            System.out.println("over draft num" + acc.getOverDraftCounter());
-            System.out.println("Your Account is not active , please deposit moeny to resolve negative balance");
+            System.out.println(ConsoleColors.RED +
+                    "Your Account has been deactivated after reaching the overdraft limit. " +
+                    "Please deposit money to resolve negative balance" + ConsoleColors.RESET);
             return;
         }
-        if (possibleWithdraw > limit && transferId != null) {
-            System.out.println("you can't withdraw more then your allowed limit!!");
+        if (possibleWithdraw > limit && transferId == null) {
+            System.out.println(ConsoleColors.RED +
+                    "Daily withdrawal limit reached. Please try again tomorrow." + ConsoleColors.RESET);
             return;
         }
         double oldBalance = acc.getBalance();
         if (oldBalance < 0) {
             if (amount > 100) {
-                System.out.println(ConsoleColors.RED +"Transaction declined: "+
-                        " You cannot withdraw more than 100 BHD when your account is negative."
-                        +ConsoleColors.RESET);
+                System.out.println(ConsoleColors.RED + "Transaction declined: " +
+                        " You cannot withdraw more than 100 BHD while your account has a negative balance."
+                        + ConsoleColors.RESET);
             } else {
                 acc.setOverDraftCounter(acc.getOverDraftCounter() + 1);
                 double balance = oldBalance - (amount);
@@ -187,14 +205,14 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
             Transaction trans = new Transaction(Transaction.TransactionType.WITHDRAW, cus.getFullName(), balance, amount, acc.getAccountId(), transferId);
             if (transferId != null) {
                 trans.setTransferId(transferId);
-                System.out.println(ConsoleColors.GREEN +"Amount transferred successfully!" +ConsoleColors.RESET);
+                System.out.println(ConsoleColors.GREEN + "Amount transferred successfully!" + ConsoleColors.RESET);
                 System.out.println("Your Balance for Account " +
-                        acc.getAccountId() + " :" + acc.getBalance()+" BHD");
-            }else {
+                        acc.getAccountId() + " :" + acc.getBalance() + " BHD");
+            } else {
                 System.out.println(ConsoleColors.GREEN
-                        +"Amount withdraw successfully."+ConsoleColors.RESET);
+                        + "Amount withdraw successfully." + ConsoleColors.RESET);
                 System.out.println("Your Balance for Account " +
-                        acc.getAccountId() + " :" + acc.getBalance()+" BHD");
+                        acc.getAccountId() + " :" + acc.getBalance() + " BHD");
             }
             addTransaction(trans);
             saveCustomerTransaction(trans);
@@ -212,63 +230,69 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
         Transaction trans2 = new Transaction(Transaction.TransactionType.OVERDRAFT_PENALTY, this.getFullName(), balance, 35, acc.getAccountId(), null);
         addTransaction(trans2);
         saveCustomerTransaction(trans2);
+        System.out.println(
+                ConsoleColors.YELLOW +
+                        "Overdraft fee of 35 BHD has been applied." +
+                        ConsoleColors.RESET
+        );
     }
 
     public double getUserTransferTotal(Account acc) {
         ArrayList<Transaction> todayTransaction = filterTodayTransaction();
         return todayTransaction.stream()
-                .filter(t->t.getAccountId()==acc.getAccountId()
+                .filter(t -> t.getAccountId() == acc.getAccountId()
                         && t.getTransactionType() == Transaction.TransactionType.WITHDRAW
-                        && t.getTransferId() !=null
-                && !t.getDoneBy().equals(this.getFullName()))
+                        && t.getTransferId() != null
+                        && !t.getDoneBy().equals(this.getFullName()))
                 .mapToDouble(Transaction::getAmount).sum();
 
     }
+
     public double getUserTransferTotalToOwnAccount(Account acc) {
         ArrayList<Transaction> todayTransaction = filterTodayTransaction();
         return todayTransaction.stream()
-                .filter(t->t.getAccountId()==acc.getAccountId()
+                .filter(t -> t.getAccountId() == acc.getAccountId()
                         && t.getTransactionType() == Transaction.TransactionType.WITHDRAW
-                        && t.getTransferId() !=null
-                && t.getDoneBy().equals(this.getFullName()) )
+                        && t.getTransferId() != null
+                        && t.getDoneBy().equals(this.getFullName()))
                 .mapToDouble(Transaction::getAmount).sum();
 
     }
+
     @Override
     public void transferMoney(double amount, int srcAccount, int destinationAccount, Bank bank) {
         Customer srcCustomer = bank.getCustomerByAccountId(srcAccount);
+        Customer customer = bank.getCustomerByAccountId(destinationAccount);
+
         int id = transferId;
         transferId++;
-        if (srcCustomer != null) {
-            Customer customer = bank.getCustomerByAccountId(destinationAccount);
-            if (srcCustomer == customer){
-                Account src = getAccountById(srcAccount);
-                double limit = src.getCard().getCardTransferLimitToOwn();
-            double total = getUserTransferTotalToOwnAccount(src);
-            if(total > limit && transferId != null){
-                System.out.println(ConsoleColors.RED+
-                        "Transfer Limit to your own account reached for today . try again tomorrow!!"+ConsoleColors.RESET);
+        if (srcCustomer == customer) {
+            Account src = getAccountById(srcAccount);
+            double limit = src.getCard().getCardTransferLimitToOwn();
+            double possibleTransfer = amount + getUserTransferTotalToOwnAccount(src);
+            if (possibleTransfer > limit && transferId != null) {
+                System.out.println(ConsoleColors.RED +
+                        "Daily transfer to your own account limit reached . try again tomorrow!!" + ConsoleColors.RESET);
                 return;
             }
-                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id,bank );
-                Account destAccount = customer.getAccountById(destinationAccount);
-                customer.deposit(destAccount, amount, id,srcCustomer.getFullName(),bank );
-            } else {
-                Account src = getAccountById(srcAccount);
-                double limit = src.getCard().getCardTransferLimit();
-                double total = getUserTransferTotal(src);
-                if(total > limit){
-                    System.out.println(ConsoleColors.RED+"Transfer Limit to different account reached for today ." +
-                            " try again tomorrow!!"+ ConsoleColors.RESET);
-                    return;
-                }
-                srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount),amount,id,bank);
-                Account destAccount = customer.getAccountById(destinationAccount);
-                customer.deposit(destAccount, amount, id,srcCustomer.getFullName(),bank );
+            srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id, bank);
+            Account destAccount = customer.getAccountById(destinationAccount);
+            customer.deposit(destAccount, amount, id, srcCustomer.getFullName(), bank);
+        } else {
+            Account src = getAccountById(srcAccount);
+            double limit = src.getCard().getCardTransferLimit();
+            double possibleTransferToDiff = amount + getUserTransferTotal(src);
+            if (possibleTransferToDiff > limit) {
+                System.out.println(ConsoleColors.RED + "Transfer Limit to different account reached for today ." +
+                        " try again tomorrow!!" + ConsoleColors.RESET);
+                return;
             }
-
-
+            srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id, bank);
+            Account destAccount = customer.getAccountById(destinationAccount);
+            customer.deposit(destAccount, amount, id, srcCustomer.getFullName(), bank);
         }
+
+
     }
 
     public void saveCustomerTransaction(Transaction trans) {
@@ -323,36 +347,43 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
                 writer.write("Transfer Id: " + trans.getTransferId());
                 writer.newLine();
             }
-
-
             writer.write("----------------------------------------");
             writer.newLine();
-
             writer.close();
-
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save customer transaction :"+getCustomerId(), e);
+            throw new RuntimeException("Failed to save customer transaction :" + getCustomerId(), e);
         }
     }
 
 
-
     public void getDetailedAccountStatment(Account acc) {
         System.out.println("========== ACCOUNT STATEMENT ==========");
-        System.out.println("Account ID: " + acc.getAccountId());
-        System.out.println("Account Type: " + acc.getType());
-        System.out.println("Balance: " + acc.getBalance());
-        System.out.println("Card Type: " + acc.getCard().getType());
-        System.out.println("Card Id: " + acc.getCard().getCardNumber());
-
-        //  System.out.println("Card Type: " + acc.getBalance());
+        System.out.println();
+        System.out.println("Account Information");
         System.out.println("---------------------------------------");
-
+        System.out.println("Account ID     :" + acc.getAccountId());
+        System.out.println("Account Type   :" + acc.getType());
+        System.out.println("Balance        :" + acc.getBalance());
+        System.out.println("Account Status :" + (acc.isActive() ? "Active" : "Inactive"));
+        System.out.println();
+        System.out.println("Card Information");
+        System.out.println("---------------------------------------");
+        System.out.println("Card Type     :" + acc.getCard().getType());
+        System.out.println("Card Number   :" + acc.getCard().getCardNumber());
+        System.out.println("---------------------------------------");
+        System.out.println();
+        System.out.println("TRANSACTION HISTORY");
+        System.out.println("---------------------------------------");
         ArrayList<Transaction> transactionsFiltered = transactionsList.stream()
                 .filter(t -> t.getAccountId() == acc.getAccountId())
                 .collect(Collectors.toCollection(ArrayList::new));
-        //System.out.println("Filtered transactions: " + transactionsFiltered.size());
-        printTransactionDetails(transactionsFiltered);
+        if (transactionsFiltered.isEmpty()) {
+            System.out.println("No Transaction Found!");
+        } else {
+            printTransactionDetails(transactionsFiltered);
+        }
+        System.out.println("---------------------------------------");
+
     }
 
     public void printTransactionDetails(ArrayList<Transaction> list) {
@@ -376,6 +407,7 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
                 .filter(t -> t.getDateTime().toLocalDate().equals(today))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
+
     public ArrayList<Transaction> filterTransaction(String filterChoice, Scanner scan) {
         LocalDate today = LocalDate.now();
         switch (filterChoice) {
@@ -432,7 +464,8 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
                     try {
                         date = LocalDate.parse(input, formatter);
                     } catch (DateTimeParseException e) {
-                        System.out.println("Invalid format! Please try again using YYYY-MM-DD.");
+                        System.out.println(ConsoleColors.RED +
+                                "Invalid format! Please try again using YYYY-MM-DD." + ConsoleColors.RESET);
                     }
                 }
                 LocalDate choosenDate = date;
@@ -458,7 +491,8 @@ public String checkDeposit(Account acc, String doneBy, Bank bank){
                     } catch (DateTimeParseException e) {
                         date1 = null;
                         time = null;
-                        System.out.println("Invalid format! Please try again.");
+                        System.out.println(ConsoleColors.RED +
+                                "Invalid format! Please try again." + ConsoleColors.RESET);
                     }
                 }
                 LocalDate choosenDate1 = date1;

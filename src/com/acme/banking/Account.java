@@ -39,6 +39,8 @@ public class Account {
     public void setOverDraftCounter(int overDraftCounter) {
         this.OverDraftCounter = overDraftCounter;
         if (this.OverDraftCounter >= 2) {
+            System.out.println(ConsoleColors.RED
+            +" Your account has been deactivated after reaching the overdraft limit."+ConsoleColors.RESET);
             setActive(false);
         }
     }
