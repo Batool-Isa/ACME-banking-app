@@ -47,7 +47,7 @@ public class Main {
                 case "exit":
                     System.out.println();
                     System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
-                            "Thank you for banking with ACME Bank!" +
+                            "Thank you for using ACME Bank App!" +
                             ConsoleColors.RESET);
                     System.out.println();
                     continueMenu = false;

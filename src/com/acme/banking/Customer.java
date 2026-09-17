@@ -411,7 +411,7 @@ return null;
         LocalDate today = LocalDate.now();
         switch (filterChoice) {
             case "1":
-                filterTodayTransaction();
+             return  filterTodayTransaction();
             case "2":
                 LocalDate yesterday = today.minusDays(1);
                 return new ArrayList<Transaction>(this.getTransactionsList()

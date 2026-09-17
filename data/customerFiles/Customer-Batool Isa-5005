@@ -25,7 +25,7 @@ Done By: Batool Isa
 Account ID: 9002
 Transaction ID: 100001
 Type: WITHDRAW
-Date: 2026-09-17 08:54:38
+Date: 2026-09-10 08:54:38
 Amount: 4344.0
 Balance After Transaction: 4887.00
 Done By: Batool Isa
@@ -63,5 +63,39 @@ Type: DEPOSIT
 Date: 2026-09-17 09:03:24
 Amount: 900.0
 Balance After Transaction: 9010.00
+Done By: Batool Isa
+----------------------------------------
+Account ID: 9001
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 09:17:22
+Amount: 900.0
+Balance After Transaction: 90644.00
+Done By: Ali Hasan
+Transfer Id: 60000
+----------------------------------------
+Account ID: 9002
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 09:17:55
+Amount: 50.0
+Balance After Transaction: 9060.00
+Done By: Ali Hasan
+Transfer Id: 60002
+----------------------------------------
+Account ID: 9001
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 10:00:35
+Amount: 90.0
+Balance After Transaction: 90734.00
+Done By: Batool Isa
+----------------------------------------
+Account ID: 9002
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 10:00:56
+Amount: 1.0
+Balance After Transaction: 9059.00
 Done By: Batool Isa
 ----------------------------------------
