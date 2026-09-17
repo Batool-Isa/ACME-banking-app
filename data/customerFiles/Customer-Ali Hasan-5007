@@ -1,0 +1,42 @@
+Account ID: 9004
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-08-17 08:56:39
+Amount: 9222.0
+Balance After Transaction: 9222.00
+Done By: Ali Hasan
+----------------------------------------
+Account ID: 9005
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 08:56:59
+Amount: 90.0
+Balance After Transaction: 90.00
+Done By: Ali Hasan
+----------------------------------------
+Account ID: 9004
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 08:57:08
+Amount: 1000.0
+Balance After Transaction: 8222.00
+Done By: Ali Hasan
+----------------------------------------
+Account ID: 9004
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 08:57:19
+Amount: 3000.0
+Balance After Transaction: 5222.00
+Done By: Ali Hasan
+Transfer Id: 60002
+----------------------------------------
+Account ID: 9004
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 08:57:44
+Amount: 1000.0
+Balance After Transaction: 4222.00
+Done By: Ali Hasan
+Transfer Id: 60003
+----------------------------------------

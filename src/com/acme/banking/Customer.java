@@ -80,7 +80,8 @@ public class Customer extends User implements IBankingOperations {
     }
 
     public Account getAccountById(int accId) {
-        return accounts.stream().filter(acc -> acc.getAccountId() == accId).findFirst().orElse(null);
+        return accounts.stream().filter(acc -> acc.getAccountId() == accId)
+                .findFirst().orElse(null);
     }
 
     public void printAccount(ArrayList<Account> accounts) {
@@ -357,7 +358,6 @@ return null;
 
 
     public void getDetailedAccountStatment(Account acc) {
-        System.out.println("========== ACCOUNT STATEMENT ==========");
         System.out.println();
         System.out.println("Account Information");
         System.out.println("---------------------------------------");
@@ -382,7 +382,6 @@ return null;
         } else {
             printTransactionDetails(transactionsFiltered);
         }
-        System.out.println("---------------------------------------");
 
     }
 

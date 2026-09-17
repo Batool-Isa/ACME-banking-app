@@ -1,6 +1,8 @@
 package com.acme.banking;
+
 import java.util.*;
 import java.util.Scanner;
+
 public class Main {
     public static void startMenu(Scanner scan, User user, Bank bank) {
         boolean continueMenu = true;
@@ -36,9 +38,9 @@ public class Main {
                     filterMenu(scan, customer);
                     break;
                 case "7":
-                case "change":
+                case "manage":
                 case "card":
-                    changeCardMenu(scan, customer, accounts);
+                    manageCardMenu(scan, customer, accounts);
                     break;
                 case "8":
                 case "logout":
@@ -53,6 +55,7 @@ public class Main {
             }
         }
     }
+
     public static void printCustomerMenu(User user) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -75,13 +78,14 @@ public class Main {
         System.out.println(" 4 - Transfer Money");
         System.out.println(" 5 - Account Statement");
         System.out.println(" 6 - Filter Transactions");
-        System.out.println(" 7 - Change Card Type");
-        System.out.println(" 8 - Exit");
+        System.out.println(" 7 - Manage Card Type");
+        System.out.println(" 8 - Logout");
         System.out.println();
         System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
                 "Enter your choice: " +
                 ConsoleColors.RESET);
     }
+
     public static void depositMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank, User user) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -118,6 +122,7 @@ public class Main {
         } while (!valid);
         scan.nextLine();
     }
+
     public static void withdrawMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank, User user) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -147,6 +152,7 @@ public class Main {
         customer.withdraw(account2, amount2, null, bank);
         scan.nextLine();
     }
+
     public static void transferMenu(Scanner scan, Customer customer, ArrayList<Account> accounts, Bank bank) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -195,6 +201,7 @@ public class Main {
         } while (!validId);
         scan.nextLine();
     }
+
     public static void statementMenu(Scanner scan, Customer customer, ArrayList<Account> accounts) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -212,6 +219,7 @@ public class Main {
         customer.getDetailedAccountStatment(account);
         scan.nextLine();
     }
+
     public static void filterMenu(Scanner scan, Customer customer) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -237,10 +245,14 @@ public class Main {
                 "Enter your choice: " +
                 ConsoleColors.RESET);
         String filterChoice = scan.nextLine();
-        customer.printTransactionDetails(
-                customer.filterTransaction(filterChoice, scan)
-        );
+        ArrayList<Transaction> filteredTransactions = customer.filterTransaction(filterChoice, scan);
+        if (filteredTransactions.isEmpty()) {
+            System.out.println("No transactions associated with this filter.");
+        } else {
+            customer.printTransactionDetails(filteredTransactions);
+        }
     }
+
     public static void changeCardMenu(Scanner scan, Customer customer, ArrayList<Account> accounts) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -256,8 +268,57 @@ public class Main {
         scan.nextLine();
         Account userAccount =
                 (customer.getAccountById(accountId4));
+        if (userAccount == null) {
+            System.out.println(ConsoleColors.RED +
+                    "Account not found." +
+                    ConsoleColors.RESET);
+            return;
+        }
         userAccount.changeCardType(userAccount, scan);
     }
+
+    public static void manageCardMenu(Scanner scan, Customer customer,
+                                      ArrayList<Account> accounts) {
+
+        boolean back = false;
+
+        while (!back) {
+
+            System.out.println();
+            System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
+                    "========== MANAGE CARD ==========" +
+                    ConsoleColors.RESET);
+            System.out.println();
+            System.out.println("1. View Card Details");
+            System.out.println("2. Change Card Type");
+            System.out.println("3. Back");
+            System.out.println();
+
+            System.out.print(ConsoleColors.YELLOW +
+                    "Enter your choice: " +
+                    ConsoleColors.RESET);
+
+            int choice = scan.nextInt();
+            scan.nextLine();
+
+            switch (choice) {
+                case 1:
+                    Account.viewCardDetails(scan, customer, accounts);
+                    break;
+                case 2:
+                    changeCardMenu(scan, customer, accounts);
+                    break;
+                case 3:
+                    back = true;
+                    break;
+                default:
+                    System.out.println(ConsoleColors.RED +
+                            "Invalid choice. Please try again." +
+                            ConsoleColors.RESET);
+            }
+        }
+    }
+
     public static void bankerStartMenu(Scanner scan, User user, Bank bank) {
         boolean continueMenu = true;
         while (continueMenu) {
@@ -287,6 +348,7 @@ public class Main {
             }
         }
     }
+
     public static void printBankerMenu(User user) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -305,12 +367,13 @@ public class Main {
         System.out.println();
         System.out.println(" 1 - Add New Customer");
         System.out.println(" 2 - View Customer History");
-        System.out.println(" 3 - Exit");
+        System.out.println(" 3 - Logout");
         System.out.println();
         System.out.print(ConsoleColors.BOLD + ConsoleColors.YELLOW +
                 "Enter your choice: " +
                 ConsoleColors.RESET);
     }
+
     public static void customerHistoryMenu(Scanner scan, Bank bank) {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +
@@ -323,10 +386,15 @@ public class Main {
         int customerId = scan.nextInt();
         scan.nextLine();
         Customer customer = bank.getCustomerByCustomerId(customerId);
+        if(customer == null){
+            System.out.println("No customer have this customer id");
+            return;
+        }
         for (Account acc : customer.getAccounts()) {
             customer.getDetailedAccountStatment(acc);
         }
     }
+
     public static void createAccountMenu(Scanner scan, User user) {
         String type;
         do {
@@ -347,6 +415,7 @@ public class Main {
         String pass = scan.nextLine();
         acc.setPassword(SecurityUtil.hashPassword(pass));
     }
+
     public static void signUpMenu(Bank bank, Scanner scan) {
         // add input validation later
         String customerUsername;
@@ -415,9 +484,11 @@ public class Main {
         System.out.println("Username: " + customer.getUsername());
         System.out.println("Customer ID: " + customer.getCustomerId());
     }
+
     private static String generateTemporaryPassword() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
+
     public static void addCustomerMenu(Bank bank, Scanner scan, Banker banker) {
         // add input validation later
         System.out.println();
@@ -452,17 +523,21 @@ public class Main {
         customer.setFirstLogin(true);
         bank.addUser(customer);
         banker.saveBankerOperations(customer);
+        String accountPassword = generateTemporaryPassword();
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.GREEN +
                 "Customer account created successfully!" +
                 ConsoleColors.RESET);
-        System.out.println("Temporary Password: " + pass);
+        System.out.println("Customer Temporary Password: " + pass);
+        System.out.println("Account Temporary Password: " + accountPassword);
+
         System.out.println("Customer ID: " + customer.getCustomerId());
-        System.out.println("Account ID: " +
-                (customer.getAccounts().stream()
-                        .max(Comparator.comparing(Account::getCreatedAt))
-                        .orElse(null)).getAccountId());
+        Optional<Account> account = customer.getAccounts().stream()
+                .max(Comparator.comparing(Account::getCreatedAt));
+        account.ifPresent(a -> a.setPassword(accountPassword));
+        account.ifPresent(acc -> System.out.println("Account ID: " + acc.getAccountId()));
     }
+
     public static void loginMenu(Bank bank, Scanner scan) {
         boolean successLogin = false;
         do {
@@ -489,13 +564,10 @@ public class Main {
                 } else if (user instanceof Banker) {
                     bankerStartMenu(scan, user, bank);
                 }
-            } else {
-                System.out.println(ConsoleColors.RED +
-                        "Invalid username or password. Please try again." +
-                        ConsoleColors.RESET);
             }
         } while (!successLogin);
     }
+
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
         Bank bank = new Bank();
@@ -522,6 +594,7 @@ public class Main {
             }
         } while (!exitProgram);
     }
+
     public static void printMainMenu() {
         System.out.println();
         System.out.println(ConsoleColors.BOLD + ConsoleColors.CYAN +

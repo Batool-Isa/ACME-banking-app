@@ -2,6 +2,6 @@ saad,khan,saadkhan,idh36%@#FGd,Customer
 melvin,gordon,melvingordon,uYWE732g4ga1,Customer
 stacey,abrams,staceyabrams,DEU8_qw3y72$,Customer
 micheal,paul,michealpaul,d^dg23g)@,Customer
-Batool,Isa,bisa11,bisa,Customer
-Maryam,Hasan,maryam11,maryam11,Banker
-saad,iqbal,saadiqbal,saadiqbal,Banker
+Batool,Isa,bisa,bisa123123,Customer
+Maryam,Hasan,maryam11,maryam123123,Banker
+saad,iqbal,saadiqbal,saadiqbal123123,Banker

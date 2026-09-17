@@ -1,5 +1,6 @@
 package com.acme.banking;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public abstract class User {
@@ -87,6 +88,9 @@ public abstract class User {
 
     public void setFailedLoginAttempts(int failedLoginAttempts) {
         this.failedLoginAttempts = failedLoginAttempts;
+        if (this.failedLoginAttempts >= 3) {
+            lockedUntil = LocalDateTime.now().plusMinutes(1);
+        }
     }
 
     public LocalDateTime getLockedUntil() {

@@ -28,7 +28,7 @@ public class Bank {
     }
 
 
-    private  void initializedUsersData() {
+    private void initializedUsersData() {
         File file = new File("data/users.txt");
         if (file.length() == 0) {
             loadInitialUser();
@@ -38,11 +38,12 @@ public class Bank {
 
     }
 
-    public boolean checkUsername(String username){
+    public boolean checkUsername(String username) {
         return this.getAppUsers().stream()
-                .anyMatch(u ->u.getUsername().equalsIgnoreCase(username));
+                .anyMatch(u -> u.getUsername().equalsIgnoreCase(username));
     }
-    private  void loadInitialUser() {
+
+    private void loadInitialUser() {
         try {
             BufferedReader reader = new BufferedReader(new FileReader("data/init.txt"));
             String line;
@@ -75,7 +76,7 @@ public class Bank {
 
     }
 
-    public  void addUserToLists(User user) {
+    public void addUserToLists(User user) {
         appUsers.add(user);
         if (user instanceof Customer) {
             customerArrayList.add((Customer) user);
@@ -85,7 +86,7 @@ public class Bank {
         }
     }
 
-    public  void addUser(User user) {
+    public void addUser(User user) {
         addUserToLists(user);
         addUsersToFile(user);
     }
@@ -94,7 +95,7 @@ public class Bank {
         return appUsers;
     }
 
-    public  void addUsersToFile(User user) {
+    public void addUsersToFile(User user) {
 
         try {
             BufferedWriter writer =
@@ -115,6 +116,8 @@ public class Bank {
                         .add(user.getPassword())
                         .add(String.valueOf(customer.isFirstLogin()))
                         .add(user.getRole())
+                        .add(String.valueOf(user.getFailedLoginAttempts()))
+                        .add(String.valueOf(user.getLockedUntil()))
                         .toString();
 
             } else if (user instanceof Banker) {
@@ -129,6 +132,8 @@ public class Bank {
                         .add(user.getUsername())
                         .add(user.getPassword())
                         .add(user.getRole())
+                        .add(String.valueOf(user.getFailedLoginAttempts()))
+                        .add(String.valueOf(user.getLockedUntil()))
                         .toString();
 
             } else {
@@ -144,25 +149,22 @@ public class Bank {
         }
     }
 
-    public  void loadUsers() {
-
+    public void loadUsers() {
         try {
             BufferedReader reader =
                     new BufferedReader(new FileReader("data/users.txt"));
-
             String line;
 
             while ((line = reader.readLine()) != null) {
 
-                String[] data = line.split("\\|");
+                String[] data = line.split("\\|", -1);
 
-                String role = data[data.length - 1];
                 int userId = Integer.parseInt(data[0]);
-                if (role.equalsIgnoreCase("Banker")) {
-                    if (data.length != 7) {
-                        System.out.println("Invalid Data");
-                    }
+
+                if (data.length == 9 && data[6].equalsIgnoreCase("Banker")) {
+
                     int bankerId = Integer.parseInt(data[1]);
+
                     Banker banker = new Banker(
                             data[2],
                             data[3],
@@ -174,12 +176,18 @@ public class Bank {
                     banker.setUserId(userId);
                     banker.setPassword(data[5]);
                     banker.setBankerId(bankerId);
+                    banker.setFailedLoginAttempts(Integer.parseInt(data[7]));
+
+                    if (!data[8].isEmpty() && !data[8].equals("null")) {
+                        banker.setLockedUntil(
+                                LocalDateTime.parse(data[8])
+                        );
+                    }
 
                     addUserToLists(banker);
-                } else {
-                    if (data.length != 8) {
-                        System.out.println("Invalid Data");
-                    }
+
+                } else if (data.length == 10 && data[7].equalsIgnoreCase("Customer")) {
+
                     int customerId = Integer.parseInt(data[1]);
 
                     Customer customer = new Customer(
@@ -193,11 +201,20 @@ public class Bank {
                     customer.setUserId(userId);
                     customer.setCustomerId(customerId);
                     customer.setPassword(data[5]);
-                    customer.setFirstLogin(Boolean.parseBoolean(data[data.length - 2]));
-                    this.addUserToLists(customer);
+                    customer.setFirstLogin(Boolean.parseBoolean(data[6]));
+                    customer.setFailedLoginAttempts(Integer.parseInt(data[8]));
+
+                    if (!data[9].isEmpty() && !data[9].equals("null")) {
+                        customer.setLockedUntil(
+                                LocalDateTime.parse(data[9])
+                        );
+                    }
+
+                    addUserToLists(customer);
+
+                } else {
+                    System.out.println("Invalid Data");
                 }
-
-
             }
 
             reader.close();
@@ -206,40 +223,57 @@ public class Bank {
             throw new RuntimeException(e);
         }
     }
-
     public User login(String username, String pass, Scanner scan) {
         for (User user : appUsers) {
             if (user.getUsername().equalsIgnoreCase(username)) {
+                // check if user is locked for now
+                if (user.getLockedUntil() != null) {
+                    if (LocalDateTime.now().isBefore(user.getLockedUntil())) {
+                        System.out.println(ConsoleColors.RED +
+                                "Account is Locked for now. Please try again later."
+                                + ConsoleColors.RESET);
+                        return null;
+                    } else {
+                        user.setFailedLoginAttempts(0);
+                        user.setLockedUntil(null);
+                        updateUserInFile(user);
+                        //System.out.println("Account unlocked! Please try again.");
+                    }
+                }
+
                 if (user.checkPassword(pass)) {
+                    user.setFailedLoginAttempts(0);
+                    user.setLockedUntil(null);
+                    updateUserInFile(user);
                     if (user instanceof Customer && ((Customer) user).isFirstLogin()) {
                         Customer customer = getcustomerbyUserId(user.getUserId());
-                        System.out.println("Login first:+ " + customer.isFirstLogin());
-                        System.out.println("Your Password is temporary \n Please change the password:");
+                       // System.out.println("Login first:+ " + customer.isFirstLogin());
+
+                        System.out.println("Your Password is temporary.");
+                        System.out.println("Please change your password:");
                         String password = scan.nextLine();
                         String hashedPassword = SecurityUtil.hashPassword(password);
                         user.setPassword(hashedPassword);
+                        System.out.println("Your Account Password is temporary.");
+                        System.out.println("Please change your account password:");
+                        String accPassword = scan.nextLine();
+                        Optional<Account> account = customer.getAccounts().stream().findFirst();
+                        account.ifPresent(acc -> acc.setPassword(SecurityUtil.hashPassword(accPassword)));
                         customer.setFirstLogin(false);
                         Bank.updateUserInFile(customer);
                     }
                     return user;
                 } else {
                     user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
-                    System.out.println("Attemp: " + user.getFailedLoginAttempts());
-                    if (user.getFailedLoginAttempts() >= 3) {
-                        System.out.println("Account Locked for 1 minutes!!!");
-                        try {
-                            Thread.sleep(60000);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                        user.setFailedLoginAttempts(0);
-                        System.out.println("Account unlocked! Please try again.");
-
-                    }
+                    updateUserInFile(user);
 
                 }
             }
         }
+        System.out.println(ConsoleColors.RED +
+                "Invalid username or password. Please try again." +
+                ConsoleColors.RESET);
+
         return null;
     }
 
@@ -253,7 +287,7 @@ public class Bank {
 
     }
 
-    public  void loadAccounts() {
+    public void loadAccounts() {
         try {
             BufferedReader reader =
                     new BufferedReader(new FileReader("data/accounts.txt"));
@@ -315,7 +349,7 @@ public class Bank {
         }
     }
 
-    public  void loadTransactions() {
+    public void loadTransactions() {
 
         for (Customer customer : customerArrayList) {
             File customerFile = new File(
@@ -450,7 +484,7 @@ public class Bank {
         return null;
     }
 
-    public  Customer getcustomerbyUserId(int userId) {
+    public Customer getcustomerbyUserId(int userId) {
         return customerArrayList.stream()
                 .filter(cus -> cus.getUserId() == userId)
                 .findFirst().orElse(null);
@@ -462,7 +496,7 @@ public class Bank {
                 .findFirst().orElse(null);
     }
 
-    public  Customer getCustomerByAccountId(int accountId) {
+    public Customer getCustomerByAccountId(int accountId) {
 
         for (Customer customer : this.customerArrayList) {
 
@@ -505,7 +539,9 @@ public class Bank {
                                 user.getUsername(),
                                 user.getPassword(),
                                 String.valueOf(customer.isFirstLogin()),
-                                user.getRole()
+                                user.getRole(),
+                                String.valueOf(user.getFailedLoginAttempts()),
+                                String.valueOf(user.getLockedUntil())
                         );
 
                     } else {
@@ -519,7 +555,9 @@ public class Bank {
                                 user.getLastName(),
                                 user.getUsername(),
                                 user.getPassword(),
-                                user.getRole()
+                                user.getRole(),
+                                String.valueOf(user.getFailedLoginAttempts()),
+                                String.valueOf(user.getLockedUntil())
                         );
                     }
 
