@@ -1,0 +1,33 @@
+Account ID: 9008
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 12:55:29
+Amount: 9000.0
+Balance After Transaction: 9000.00
+Done By: nehal isa
+----------------------------------------
+Account ID: 9008
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 12:56:06
+Amount: 150000.0
+Balance After Transaction: 159000.00
+Done By: nehal isa
+----------------------------------------
+Account ID: 9008
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 12:57:11
+Amount: 4000.0
+Balance After Transaction: 155000.00
+Done By: nehal isa
+----------------------------------------
+Account ID: 9008
+Transaction ID: 100001
+Type: WITHDRAW
+Date: 2026-09-17 12:57:27
+Amount: 900.0
+Balance After Transaction: 154100.00
+Done By: nehal isa
+Transfer Id: 60000
+----------------------------------------

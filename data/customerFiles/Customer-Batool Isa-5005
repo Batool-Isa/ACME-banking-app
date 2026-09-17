@@ -99,3 +99,28 @@ Amount: 1.0
 Balance After Transaction: 9059.00
 Done By: Batool Isa
 ----------------------------------------
+Account ID: 9001
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 11:01:30
+Amount: 1.0
+Balance After Transaction: 90735.00
+Done By: Batool Isa
+----------------------------------------
+Account ID: 9001
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 12:52:01
+Amount: 900.0
+Balance After Transaction: 91635.00
+Done By: Batool Isa
+----------------------------------------
+Account ID: 9001
+Transaction ID: 100001
+Type: DEPOSIT
+Date: 2026-09-17 12:57:27
+Amount: 900.0
+Balance After Transaction: 92535.00
+Done By: nehal isa
+Transfer Id: 60000
+----------------------------------------

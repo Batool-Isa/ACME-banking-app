@@ -126,7 +126,7 @@ return null;
         if (checkOwner.equalsIgnoreCase("Same")
                 && (possibleDeposit > limit) && transferId == null) {
             System.out.println(ConsoleColors.RED +
-                    "Daily deposit to your own account limit reached. Please try again tomorrow."
+                    "With this deposit daily deposit to your own account limit reached. Please try again tomorrow."
                     + ConsoleColors.RESET);
             return;
 
@@ -161,7 +161,8 @@ return null;
     public void withdraw(Account acc, double amount, Integer transferId, Bank bank) {
         //System.out.println("user balance before Withdraw: " + acc.getBalance());
         double limit = acc.getCard().getCardWithdrawLimit();
-        double possibleWithdraw = amount + getUserWithdrawTotal(acc);
+        double total = getUserWithdrawTotal(acc);
+        double possibleWithdraw = amount + total;
         Customer cus = bank.getCustomerByAccountId(acc.getAccountId());
         if (amount <= 0) {
             System.out.println(ConsoleColors.RED + "Invalid Amount!!" + ConsoleColors.RESET);
@@ -175,7 +176,10 @@ return null;
         }
         if (possibleWithdraw > limit && transferId == null) {
             System.out.println(ConsoleColors.RED +
-                    "Daily withdrawal limit reached. Please try again tomorrow." + ConsoleColors.RESET);
+                    "Daily withdrawal limit reached. You have already withdrawn " +
+                    total + " BHD today, and your limit is " + limit +
+                    " BHD. Please try again tomorrow." +
+                    ConsoleColors.RESET);
             return;
         }
         double oldBalance = acc.getBalance();
@@ -270,11 +274,15 @@ return null;
         if (srcCustomer == customer) {
             Account src = getAccountById(srcAccount);
             double limit = src.getCard().getCardTransferLimitToOwn();
-            double possibleTransfer = amount + getUserTransferTotalToOwnAccount(src);
+            double total = getUserTransferTotalToOwnAccount(src);
+            double possibleTransfer = amount + total;
             if (possibleTransfer > limit && transferId != null) {
                 System.out.println(ConsoleColors.RED +
-                        "Daily transfer to your own account limit reached . try again tomorrow!!" + ConsoleColors.RESET);
-                return;
+                        "Daily transfer limit reached. You have already transferred to your account " +
+                        total + " BHD today, and your limit is " + limit +
+                        " BHD. Please try again tomorrow." +
+                        ConsoleColors.RESET);
+               return;
             }
             srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id, bank);
             Account destAccount = customer.getAccountById(destinationAccount);
@@ -282,10 +290,15 @@ return null;
         } else {
             Account src = getAccountById(srcAccount);
             double limit = src.getCard().getCardTransferLimit();
-            double possibleTransferToDiff = amount + getUserTransferTotal(src);
+            double totalToDiff = getUserTransferTotal(src);
+            double possibleTransferToDiff = amount + totalToDiff;
             if (possibleTransferToDiff > limit) {
-                System.out.println(ConsoleColors.RED + "Transfer Limit to different account reached for today ." +
-                        " try again tomorrow!!" + ConsoleColors.RESET);
+                System.out.println(ConsoleColors.RED +
+                        "Daily transfer limit reached. You have already transferred to different account " +
+                        totalToDiff + " BHD today, and your limit is " + limit +
+                        " BHD. Please try again tomorrow." +
+                        ConsoleColors.RESET);
+
                 return;
             }
             srcCustomer.withdraw(srcCustomer.getAccountById(srcAccount), amount, id, bank);
